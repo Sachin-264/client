@@ -26,18 +26,6 @@ class ComplaintBloc extends Bloc<ComplaintEvent, ComplaintState> {
       }
     });
 
-    // Delete Complaint Handler
-    on<DeleteComplaint>((event, emit) async {
-      try {
-        final response = await http.delete(Uri.parse("$apiUrl/${event.complaintNo}"));
-        if (response.statusCode == 200) {
-          add(FetchComplaints()); // Refresh list after deletion
-        } else {
-          emit(ComplaintError(message: "Failed to delete complaint"));
-        }
-      } catch (e) {
-        emit(ComplaintError(message: "Error: $e"));
-      }
-    });
+
   }
 }
