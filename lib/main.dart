@@ -1,6 +1,8 @@
 import 'package:client/saleorder/saleorderbloc.dart';
+import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'TargetDashboard/targetDashboardBloc.dart';
 import 'complaint_page.dart';
 import 'invoice/invoice bloc.dart';
 
@@ -10,6 +12,8 @@ void main() {
     MultiBlocProvider(
       providers: [
         BlocProvider<InvoiceBloc>(create: (context) => InvoiceBloc()),
+        BlocProvider<SaleOrderDraftBloc>(create: (context) => SaleOrderDraftBloc()),
+        BlocProvider<TargetDashboardBloc>(create: (context) => TargetDashboardBloc()),
         BlocProvider<SaleOrderBloc>(create: (context) => SaleOrderBloc()),
       ],
       child: MyApp(),

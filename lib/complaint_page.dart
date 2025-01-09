@@ -1,13 +1,17 @@
+import 'package:client/saleorder/sale_order_page_draft.dart';
 import 'package:client/saleorder/saleorderbloc.dart';
-import 'package:client/saleorder/saleorderpage.dart';
+import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'TargetDashboard/TargetDashboardPage.dart';
+import 'TargetDashboard/targetDashboardBloc.dart';
 import 'complaint/complaint_bloc.dart';
 import 'complaint/complaint_event.dart';
 import 'complaint/complaint_state.dart';
-import 'complaint/complaint.dart';
 import 'invoice/invoice bloc.dart';
-import 'invoice/invoicepage.dart'; // Import PerformInvoicePage
+import 'saleorder/saleorderpage.dart';
+import 'invoice/invoicepage.dart';
+// Import the new page
 import 'package:pluto_grid/pluto_grid.dart';
 
 class ComplaintPage extends StatelessWidget {
@@ -15,16 +19,17 @@ class ComplaintPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Complaint Entry List",
+        title: Text(
+          "Complaint Entry List",
           style: TextStyle(
-            color: Colors.white, // White color for text
+            color: Colors.white,
           ),
         ),
         backgroundColor: Colors.blue,
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: Icon(Icons.menu,color: Colors.white),
+              icon: Icon(Icons.menu, color: Colors.white),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -34,13 +39,13 @@ class ComplaintPage extends StatelessWidget {
       ),
       drawer: Drawer(
         child: Container(
-          color: Colors.blue[50], // Light blue background for the drawer
+          color: Colors.blue[50],
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
                 decoration: BoxDecoration(
-                  color: Colors.blue, // Blue background for the header
+                  color: Colors.blue,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -68,7 +73,7 @@ class ComplaintPage extends StatelessWidget {
                 icon: Icons.home,
                 text: 'Complaint Page',
                 onTap: () {
-                  Navigator.pop(context); // Close the drawer
+                  Navigator.pop(context);
                 },
               ),
               _createDrawerItem(
@@ -79,10 +84,10 @@ class ComplaintPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider.value(
-                        value: BlocProvider.of<SaleOrderBloc>(context),
-                        child: SaleOrderPage(),
+                        value: BlocProvider.of<SaleOrderDraftBloc>(context),
+                        child: SaleOrderDraftPage(),
                       ),
-                    ), // Navigate to SaleOrderPage
+                    ),
                   );
                 },
               ),
@@ -94,19 +99,33 @@ class ComplaintPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider.value(
-                    value: BlocProvider.of<InvoiceBloc>(context),
-                    child: InvoicePage(),
-                  ),
-                    ),// Navigate to PerformInvoicePage
+                        value: BlocProvider.of<InvoiceBloc>(context),
+                        child: InvoicePage(),
+                      ),
+                    ),
                   );
                 },
               ),
-              Divider(), // Add a divider for separation
+              _createDrawerItem(
+                icon: Icons.assessment,
+                text: 'Target Dashboard',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                    value: BlocProvider.of<TargetDashboardBloc>(context),
+                    child:TargetDashboardPage(),
+                  ),
+                    ),
+                  );
+                },
+              ),
+              Divider(),
               _createDrawerItem(
                 icon: Icons.settings,
                 text: 'Settings',
                 onTap: () {
-                  // Handle settings tap here
                   Navigator.pop(context);
                 },
               ),
