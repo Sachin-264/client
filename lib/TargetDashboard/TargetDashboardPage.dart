@@ -53,6 +53,23 @@ class TargetDashboardPage extends StatelessWidget {
                   title: 'Name',
                   field: 'SalesManName',
                   type: PlutoColumnType.text(),
+                  renderer: (rendererContext) {
+                    // Get the ViewLevel value from the row
+                    final viewLevel = int.tryParse(rendererContext.row.cells['ViewLevel']?.value.toString() ?? '1') ?? 1;
+
+                    // Calculate padding based on ViewLevel
+                    final padding = EdgeInsets.only(left: 16.0 * (viewLevel - 1));
+
+                    return Padding(
+                      padding: padding,
+                      child: Text(
+                        rendererContext.row.cells['SalesManName']?.value.toString() ?? 'N/A',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, // Optional: Add styling
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 PlutoColumn(
                   title: 'Designation',
@@ -72,11 +89,22 @@ class TargetDashboardPage extends StatelessWidget {
                   renderer: (rendererContext) {
                     return TextButton(
                       onPressed: () {
-                        // Navigate to TargetSalePage
+                        // Get the selected row's data
+                        final selectedRow = rendererContext.row.cells;
+
+                        // Extract the required values
+                        final salesmanRecNo = selectedRow['SalesManRecNo']?.value.toString() ?? 'N/A';
+
+                        print("Accessing data");
+                        print("Salesman RecNo: $salesmanRecNo");
+
+                        // Navigate to TargetSalePage with the selected row's data
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TargetSalePage(),
+                            builder: (context) => TargetSalePage(
+                              salesmanRecNo: salesmanRecNo,
+                            ),
                           ),
                         );
                       },
@@ -96,6 +124,8 @@ class TargetDashboardPage extends StatelessWidget {
                     'SalesManName': PlutoCell(value: item['SalesManName'] ?? 'N/A'),
                     'SalesManDesignation': PlutoCell(value: item['SalesManDesignation'] ?? 'N/A'),
                     'ValuePer': PlutoCell(value: '${item['ValuePer'] ?? '0.00'}%'),
+                    'SalesManRecNo': PlutoCell(value: item['SalesManRecNo'] ?? 'N/A'), // Add SalesManRecNo
+                    'ViewLevel': PlutoCell(value: item['ViewLevel'] ?? '1'), // Add ViewLevel
                     'Action': PlutoCell(value: 'Select'), // This value is not used due to custom renderer
                   },
                 );

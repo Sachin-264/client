@@ -1,5 +1,4 @@
 import 'package:client/saleorder/sale_order_page_draft.dart';
-import 'package:client/saleorder/saleorderbloc.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +8,8 @@ import 'complaint/complaint_bloc.dart';
 import 'complaint/complaint_event.dart';
 import 'complaint/complaint_state.dart';
 import 'invoice/invoice bloc.dart';
-import 'saleorder/saleorderpage.dart';
+import 'itemmanagement/itembloc.dart';
+import 'itemmanagement/itemselectionpage.dart';
 import 'invoice/invoicepage.dart';
 // Import the new page
 import 'package:pluto_grid/pluto_grid.dart';
@@ -121,6 +121,22 @@ class ComplaintPage extends StatelessWidget {
                   );
                 },
               ),
+              _createDrawerItem(
+                icon: Icons.report_gmailerrorred_outlined,
+                text: 'Item report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: context.read<ItemManagementBloc>(),
+                        child: ItemSelectionPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
               Divider(),
               _createDrawerItem(
                 icon: Icons.settings,

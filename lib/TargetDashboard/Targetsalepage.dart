@@ -6,6 +6,11 @@ import 'package:client/TargetDashboard/targetsale&viewallbloc.dart';
 // Import the SelectPage
 
 class TargetSalePage extends StatelessWidget {
+
+  final String salesmanRecNo;
+
+  const TargetSalePage({ required this.salesmanRecNo,});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +90,9 @@ class TargetSalePage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ViewAllPage(),
+                                builder: (context) => ViewAllPage(
+                                    salesmanRecNo:salesmanRecNo
+                                ),
                               ),
                             );
                           },
@@ -149,6 +156,8 @@ class TargetSalePage extends StatelessWidget {
     final percentageAchieved = data['ValuePer'] ?? '0.00'; // Use ValuePer directly from API
     final fromDate = data['FromDate'] ?? 'N/A'; // Extract FromDate
     final toDate = data['ToDate'] ?? 'N/A'; // Extract ToDate
+    print(fromDate);
+    print(toDate);
 
     return InkWell(
       onTap: () {
@@ -156,7 +165,7 @@ class TargetSalePage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate),
+            builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate, salesmanRecNo: salesmanRecNo,),
           ),
         );
       },
@@ -214,13 +223,17 @@ class TargetSalePage extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
     // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
     // Start from the end of the integer part
-    for (int i = integerPart.length - 1; i >= 0; i--) {
-      buffer.write(integerPart[i]);
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
       count++;
 
       // Add a comma after every three digits from the right
@@ -237,7 +250,9 @@ class TargetSalePage extends StatelessWidget {
 
     // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-    return '$reversed$decimalPart';
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 
 }

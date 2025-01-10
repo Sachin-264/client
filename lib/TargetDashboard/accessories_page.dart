@@ -8,11 +8,13 @@ class ItemPage extends StatelessWidget {
   final String fromDate;
   final String toDate;
   final String salesmanId;
+  final String salesmanRecNo;
 
   const ItemPage({
     required this.fromDate,
     required this.toDate,
     required this.salesmanId,
+    required this.salesmanRecNo
   });
 
   @override
@@ -23,6 +25,7 @@ class ItemPage extends StatelessWidget {
           fromDate: fromDate,
           toDate: toDate,
           salesmanId: salesmanId,
+            salesmanRecNo:salesmanRecNo
         )),
       child: Scaffold(
         appBar: AppBar(
@@ -65,6 +68,7 @@ class ItemPage extends StatelessWidget {
                   title: 'Item Group Name',
                   field: 'ItemGroupName',
                   type: PlutoColumnType.text(),
+
                 ),
                 PlutoColumn(
                   title: 'Target Value',
@@ -183,13 +187,17 @@ class ItemPage extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
     // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
     // Start from the end of the integer part
-    for (int i = integerPart.length - 1; i >= 0; i--) {
-      buffer.write(integerPart[i]);
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
       count++;
 
       // Add a comma after every three digits from the right
@@ -206,6 +214,8 @@ class ItemPage extends StatelessWidget {
 
     // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-    return '$reversed$decimalPart';
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }

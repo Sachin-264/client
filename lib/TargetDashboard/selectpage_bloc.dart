@@ -55,7 +55,7 @@ class SelectPageBloc extends Bloc<SelectPageEvent, SelectPageState> {
   // Function to fetch data from the API
   Future<List<Map<String, dynamic>>> fetchSalesManData(String fromDate, String toDate) async {
     final url = Uri.parse(
-      'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=157.0&val2=96&val3=01-Apr-2024&val4=30-Apr-2024&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetSalesManReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==',
+      'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=157.0&val2=96&val3=$fromDate&val4=$toDate&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetSalesManReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==',
     );
 
     try {

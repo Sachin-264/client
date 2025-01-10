@@ -7,8 +7,13 @@ import 'selectpage_bloc.dart'; // Import your SelectPageBloc
 class SelectPage extends StatelessWidget {
   final String fromDate;
   final String toDate;
+  final String salesmanRecNo;
 
-  const SelectPage({required this.fromDate, required this.toDate});
+  const SelectPage({
+    required this.fromDate,
+    required this.toDate,
+    required this.salesmanRecNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +66,24 @@ class SelectPage extends StatelessWidget {
                   title: 'Executive Name',
                   field: 'SalesManName',
                   type: PlutoColumnType.text(),
+                  renderer: (rendererContext) {
+                    // Get the ViewLevel value from the row
+                    final viewLevelStr = rendererContext.row.cells['ViewLevel']?.value.toString() ?? '0';
+                    // Convert ViewLevel to an integer (default to 0 if conversion fails)
+                    final viewLevel = int.tryParse(viewLevelStr) ?? 0;
+                    // Calculate padding based on ViewLevel
+                    final padding = EdgeInsets.only(left: 16.0 * viewLevel);
+
+                    return Padding(
+                      padding: padding,
+                      child: Text(
+                        rendererContext.row.cells['SalesManName']?.value.toString() ?? 'N/A',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, // Optional: Add styling
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 PlutoColumn(
                   title: 'HQ Name',
@@ -108,13 +131,19 @@ class SelectPage extends StatelessWidget {
                     return TextButton(
                       onPressed: () {
                         // Navigate to the ItemPage with the selected salesman data
+                        print("Accessing data");
+                        print("From Date: $fromDate");
+                        print("To Date: $toDate");
+                        print("Salesman ID: $salesmanRecNo");
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ItemPage(
-                              fromDate: '01-Apr-2024',
-                              toDate: '30-Apr-2024',
+                              fromDate: fromDate,
+                              toDate: toDate,
                               salesmanId: '157.0',
+                              salesmanRecNo: salesmanRecNo,
                             ),
                           ),
                         );
@@ -142,6 +171,7 @@ class SelectPage extends StatelessWidget {
                     'TargeValue': PlutoCell(value: targetValue),
                     'SaleValue': PlutoCell(value: saleValue),
                     'ValuePer': PlutoCell(value: valuePer),
+                    'ViewLevel': PlutoCell(value: item['ViewLevel'] ?? '0'), // Add ViewLevel to the row
                     'Action': PlutoCell(value: 'Select'), // This value is not used due to custom renderer
                   },
                 );
@@ -173,13 +203,17 @@ class SelectPage extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
     // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
     // Start from the end of the integer part
-    for (int i = integerPart.length - 1; i >= 0; i--) {
-      buffer.write(integerPart[i]);
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
       count++;
 
       // Add a comma after every three digits from the right
@@ -196,6 +230,8 @@ class SelectPage extends StatelessWidget {
 
     // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-    return '$reversed$decimalPart';
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }

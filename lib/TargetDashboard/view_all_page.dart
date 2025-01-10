@@ -5,6 +5,10 @@ import 'package:client/TargetDashboard/select_page.dart';
 import 'package:client/TargetDashboard/targetsale&viewallbloc.dart';
 
 class ViewAllPage extends StatelessWidget {
+
+  final String salesmanRecNo;
+
+  const ViewAllPage({ required this.salesmanRecNo,});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,14 +177,54 @@ class ViewAllPage extends StatelessWidget {
 
   // Handle Action button click
   void _handleActionClick(BuildContext context, Map<String, PlutoCell> cells) {
-    final fromDate = cells['Month']?.value.toString() ?? '01-Apr-2024';
-    final toDate = '30-${fromDate.split('-')[0]}-${fromDate.split('-')[1]}';
+    // Get the month and year from the cell value (e.g., "Apr-2024")
+    final monthYear = cells['Month']?.value.toString() ?? 'Apr-2024';
+
+    // Convert "Apr-2024" to "01-Apr-2024"
+    final fromDate = '01-$monthYear';
+
+    // Calculate the last day of the month for toDate
+    final month = monthYear.split('-')[0]; // Extract month (e.g., "Apr")
+    final year = monthYear.split('-')[1];  // Extract year (e.g., "2024")
+    final lastDay = _getLastDayOfMonth(month, year); // Calculate last day of the month
+
+    // Construct toDate (e.g., "30-Apr-2024")
+    final toDate = '$lastDay-$monthYear';
+
+    // Print debug information
+    print("Viewalldata");
+    print("From Date: $fromDate");
+    print("To Date: $toDate");
+    print("Salesman RecNo: $salesmanRecNo");
+
+    // Navigate to SelectPage
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate),
+        builder: (context) => SelectPage(
+          fromDate: fromDate,
+          toDate: toDate,
+          salesmanRecNo: salesmanRecNo,
+        ),
       ),
     );
+  }
+
+// Helper function to get the last day of the month
+  String _getLastDayOfMonth(String month, String year) {
+    // Map month names to month numbers
+    final monthMap = {
+      'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+    };
+
+    // Get the month number
+    final monthNumber = monthMap[month] ?? 1;
+
+    // Calculate the last day of the month
+    final lastDay = DateTime(int.parse(year), monthNumber + 1, 0).day;
+
+    return lastDay.toString();
   }
 
   // Helper method to format numbers with commas every two digits
@@ -189,13 +233,17 @@ class ViewAllPage extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
     // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
     // Start from the end of the integer part
-    for (int i = integerPart.length - 1; i >= 0; i--) {
-      buffer.write(integerPart[i]);
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
       count++;
 
       // Add a comma after every three digits from the right
@@ -212,6 +260,8 @@ class ViewAllPage extends StatelessWidget {
 
     // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-    return '$reversed$decimalPart';
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }

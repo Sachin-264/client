@@ -15,11 +15,15 @@ class FetchItemData extends ItemEvent {
   final String fromDate;
   final String toDate;
   final String salesmanId;
+  final String salesmanRecNo;
+
+
 
   const FetchItemData({
     required this.fromDate,
     required this.toDate,
     required this.salesmanId,
+    required this.salesmanRecNo
   });
 
   @override
@@ -69,8 +73,9 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
     emit(ItemLoading());
     try {
       final response = await http.get(Uri.parse(
-        'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=${event.salesmanId}&val2=96&val3=${event.fromDate}&val4=${event.toDate}&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetItemWiseReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==',
+        'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=${event.salesmanId}&val2=${event.salesmanRecNo}&val3=${event.fromDate}&val4=${event.toDate}&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetItemWiseReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==',
       ));
+
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
