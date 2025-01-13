@@ -14,7 +14,7 @@ class ItemPage extends StatelessWidget {
     required this.fromDate,
     required this.toDate,
     required this.salesmanId,
-    required this.salesmanRecNo
+    required this.salesmanRecNo,
   });
 
   @override
@@ -25,7 +25,7 @@ class ItemPage extends StatelessWidget {
           fromDate: fromDate,
           toDate: toDate,
           salesmanId: salesmanId,
-            salesmanRecNo:salesmanRecNo
+          salesmanRecNo: salesmanRecNo,
         )),
       child: Scaffold(
         appBar: AppBar(
@@ -62,13 +62,31 @@ class ItemPage extends StatelessWidget {
             } else if (state is ItemLoaded) {
               final data = state.data;
 
+              // Print raw data for debugging
+              print('Raw Data:');
+              data.forEach((item) {
+                print(item);
+              });
+
+              // Filter out rows where both TargetValue and SaleValue are zero
+              final filteredData = data.where((item) {
+                final targetValue = double.tryParse(item['TargeValue'] ?? '0') ?? 0;
+                final saleValue = double.tryParse(item['SaleValue'] ?? '0') ?? 0;
+                return targetValue != 0 || saleValue != 0; // Keep rows where either is not zero
+              }).toList();
+
+              // Print filtered data for debugging
+              print('Filtered Data:');
+              filteredData.forEach((item) {
+                print(item);
+              });
+
               // Define PlutoGrid columns
               final columns = [
                 PlutoColumn(
                   title: 'Item Group Name',
                   field: 'ItemGroupName',
                   type: PlutoColumnType.text(),
-
                 ),
                 PlutoColumn(
                   title: 'Target Value',
@@ -98,24 +116,6 @@ class ItemPage extends StatelessWidget {
                     );
                   },
                 ),
-                // PlutoColumn(
-                //   title: 'Action',
-                //   field: 'Action',
-                //   type: PlutoColumnType.text(),
-                //   renderer: (rendererContext) {
-                //     return TextButton(
-                //       onPressed: () {
-                //         // Handle the "Select" button click
-                //         final row = rendererContext.row;
-                //         print('Selected Row: ${row.cells}');
-                //       },
-                //       child: Text(
-                //         'Select',
-                //         style: TextStyle(color: Colors.blue), // Make text blue
-                //       ),
-                //     );
-                //   },
-                // ),
               ];
 
               // Calculate totals
@@ -123,37 +123,80 @@ class ItemPage extends StatelessWidget {
               double totalSaleValue = 0;
               double totalValuePer = 0;
 
+              // Print initial totals for debugging
+              print('Initial Totals:');
+              print('Total Target Value: $totalTargetValue');
+              print('Total Sale Value: $totalSaleValue');
+              print('Total ValuePer: $totalValuePer');
+
               // Prepare PlutoGrid rows
-              final rows = data.map((item) {
+              final rows = filteredData.map((item) {
                 final targetValue = double.tryParse(item['TargeValue'] ?? '0') ?? 0;
                 final saleValue = double.tryParse(item['SaleValue'] ?? '0') ?? 0;
                 final valuePer = double.tryParse(item['ValuePer'] ?? '0') ?? 0;
 
-                // Add to totals
+                // Print values for each row for debugging
+                print('Processing Row:');
+                print('ItemGroupName: ${item['ItemGroupName']}');
+                print('TargetValue: $targetValue');
+                print('SaleValue: $saleValue');
+                print('ValuePer: $valuePer');
+
+                // Add to totals (negative values will be subtracted automatically)
                 totalTargetValue += targetValue;
                 totalSaleValue += saleValue;
                 totalValuePer += valuePer;
 
+                // Print updated totals after each row for debugging
+                print('Updated Totals:');
+                print('Total Target Value: $totalTargetValue');
+                print('Total Sale Value: $totalSaleValue');
+                print('Total ValuePer: $totalValuePer');
+
+                // Step 1: Apply _formatValuePer to handle leading zeros
+                final formattedTargetValue = _formatValuePer(targetValue.toString());
+                final formattedSaleValue = _formatValuePer(saleValue.toString());
+                final formattedValuePer = _formatValuePer(valuePer.toString());
+
+                // Step 2: Apply _formatNumber to format with commas
+                final formattedTargetValueWithCommas = _formatNumber(formattedTargetValue);
+                final formattedSaleValueWithCommas = _formatNumber(formattedSaleValue);
+                final formattedValuePerWithCommas = _formatNumber(formattedValuePer);
+
                 return PlutoRow(
                   cells: {
                     'ItemGroupName': PlutoCell(value: item['ItemGroupName'] ?? 'N/A'),
-                    'TargeValue': PlutoCell(value: _formatNumber(targetValue.toString())),
-                    'SaleValue': PlutoCell(value: _formatNumber(saleValue.toString())),
-                    'ValuePer': PlutoCell(value: valuePer),
-                    'Action': PlutoCell(value: 'Select'), // This value is not used due to custom renderer
+                    'TargeValue': PlutoCell(value: formattedTargetValueWithCommas), // Format TargetValue
+                    'SaleValue': PlutoCell(value: formattedSaleValueWithCommas), // Format SaleValue
+                    'ValuePer': PlutoCell(value: formattedValuePerWithCommas), // Format ValuePer
                   },
                 );
               }).toList();
+
+              // Print final totals for debugging
+              print('Final Totals:');
+              print('Total Target Value: $totalTargetValue');
+              print('Total Sale Value: $totalSaleValue');
+              print('Total ValuePer: $totalValuePer');
+
+              // Step 1: Apply _formatValuePer to handle leading zeros for totals
+              final formattedTotalTargetValue = _formatValuePer(totalTargetValue.toString());
+              final formattedTotalSaleValue = _formatValuePer(totalSaleValue.toString());
+              final formattedTotalValuePer = _formatValuePer(totalValuePer.toString());
+
+              // Step 2: Apply _formatNumber to format totals with commas
+              final formattedTotalTargetValueWithCommas = _formatNumber(formattedTotalTargetValue);
+              final formattedTotalSaleValueWithCommas = _formatNumber(formattedTotalSaleValue);
+              final formattedTotalValuePerWithCommas = _formatNumber(formattedTotalValuePer);
 
               // Add a last row for totals
               rows.add(
                 PlutoRow(
                   cells: {
                     'ItemGroupName': PlutoCell(value: 'Total'),
-                    'TargeValue': PlutoCell(value: _formatNumber(totalTargetValue.toString())),
-                    'SaleValue': PlutoCell(value: _formatNumber(totalSaleValue.toString())),
-                    'ValuePer': PlutoCell(value: _formatNumber(totalValuePer.toString())),
-                    'Action': PlutoCell(value: ''),
+                    'TargeValue': PlutoCell(value: formattedTotalTargetValueWithCommas),
+                    'SaleValue': PlutoCell(value: formattedTotalSaleValueWithCommas),
+                    'ValuePer': PlutoCell(value: formattedTotalValuePerWithCommas),
                   },
                 ),
               );
@@ -217,5 +260,15 @@ class ItemPage extends StatelessWidget {
 
     // Add the negative sign back if necessary
     return '${isNegative ? '-' : ''}$reversed$decimalPart';
+  }
+
+// Helper function to add leading zero to values like ".67" or "-.88"
+  String _formatValuePer(String value) {
+    if (value.startsWith('-.')) {
+      return '-0${value.substring(1)}'; // Add leading zero after the negative sign
+    } else if (value.startsWith('.')) {
+      return '0$value'; // Add leading zero if the value starts with a dot
+    }
+    return value; // Return the original value if it's already formatted
   }
 }

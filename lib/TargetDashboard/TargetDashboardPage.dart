@@ -119,11 +119,14 @@ class TargetDashboardPage extends StatelessWidget {
 
               // Prepare PlutoGrid rows, skipping rows where SalesManName is missing or empty
               final rows = state.data.where((item) => item['SalesManName'] != null && item['SalesManName'].toString().isNotEmpty).map((item) {
+                // Format ValuePer to ensure it has a leading zero if necessary
+                final valuePer = _formatValuePer(item['ValuePer']?.toString() ?? '0.00');
+
                 return PlutoRow(
                   cells: {
                     'SalesManName': PlutoCell(value: item['SalesManName'] ?? 'N/A'),
                     'SalesManDesignation': PlutoCell(value: item['SalesManDesignation'] ?? 'N/A'),
-                    'ValuePer': PlutoCell(value: '${item['ValuePer'] ?? '0.00'}%'),
+                    'ValuePer': PlutoCell(value: '$valuePer%'), // Use formatted ValuePer
                     'SalesManRecNo': PlutoCell(value: item['SalesManRecNo'] ?? 'N/A'), // Add SalesManRecNo
                     'ViewLevel': PlutoCell(value: item['ViewLevel'] ?? '1'), // Add ViewLevel
                     'Action': PlutoCell(value: 'Select'), // This value is not used due to custom renderer
@@ -149,5 +152,16 @@ class TargetDashboardPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Helper function to format ValuePer (e.g., .78 → 0.78)
+  // Helper function to add leading zero to values like ".67" or "-.88"
+  String _formatValuePer(String value) {
+    if (value.startsWith('-.')) {
+      return '-0${value.substring(1)}'; // Add leading zero after the negative sign
+    } else if (value.startsWith('.')) {
+      return '0$value'; // Add leading zero if the value starts with a dot
+    }
+    return value; // Return the original value if it's already formatted
   }
 }

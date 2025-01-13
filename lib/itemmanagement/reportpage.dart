@@ -54,11 +54,6 @@ class ReportPage extends StatelessWidget {
 
   List<PlutoColumn> _buildColumns() {
     return [
-      // PlutoColumn(
-      //   title: 'View Level',
-      //   field: 'ViewLevel',
-      //   type: PlutoColumnType.text(),
-      // ),
       PlutoColumn(
         title: 'Item Name',
         field: 'ItemName',
@@ -66,13 +61,19 @@ class ReportPage extends StatelessWidget {
         renderer: (rendererContext) {
           final cell = rendererContext.cell;
           final row = rendererContext.row;
-          final valuePer = row.cells['ValuePer']?.value;
+          final viewLevel = row.cells['ViewLevel']?.value ?? "0"; // Default to "0" if null
 
-          // Determine padding based on ValuePer
-          final padding = valuePer == 1 ? const EdgeInsets.all(8.0) : EdgeInsets.zero;
+          // Print ViewLevel for debugging
+          print('ViewLevel: $viewLevel');
+
+          // Convert ViewLevel to a double for padding calculation
+          final viewLevelValue = double.tryParse(viewLevel.toString()) ?? 0.0;
+
+          // Calculate padding based on ViewLevel
+          final padding = EdgeInsets.all(8.0 * viewLevelValue);
 
           // Determine if ItemName should be bold
-          final isBold = valuePer == 0;
+          final isBold = viewLevelValue == 0;
 
           return Padding(
             padding: padding,
@@ -109,6 +110,30 @@ class ReportPage extends StatelessWidget {
         title: 'Item File Name',
         field: 'ItemFileName',
         type: PlutoColumnType.text(),
+        renderer: (rendererContext) {
+          final cell = rendererContext.cell;
+          final imageUrl = cell.value.toString();
+
+          // Print the image URL for debugging
+          print('Image URL: $imageUrl');
+
+          // Display the image if the URL is valid
+          if (imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true) {
+            return Image.network(
+              imageUrl,
+              width: 50, // Set the width of the image
+              height: 50, // Set the height of the image
+              fit: BoxFit.cover, // Adjust the image fit
+              errorBuilder: (context, error, stackTrace) {
+                // Handle errors (e.g., broken or invalid URLs)
+                return Icon(Icons.broken_image, color: Colors.red); // Show an error icon
+              },
+            );
+          } else {
+            // Show a placeholder if the URL is invalid or empty
+            return Icon(Icons.image_not_supported, color: Colors.grey);
+          }
+        },
       ),
     ];
   }
@@ -117,14 +142,13 @@ class ReportPage extends StatelessWidget {
     return reportData.map((data) {
       return PlutoRow(
         cells: {
-          'ViewLevel': PlutoCell(value: data['ViewLevel']),
+          'ViewLevel': PlutoCell(value: data['ViewLevel']), // Use ViewLevel instead of ValuePer
           'ItemName': PlutoCell(value: data['ItemName']),
           'OurItemNo': PlutoCell(value: data['OurItemNo']),
           'Qty': PlutoCell(value: data['Qty']),
           'UnitName': PlutoCell(value: data['UnitName']),
           'ItemRemarks': PlutoCell(value: data['ItemRemarks']),
           'ItemFileName': PlutoCell(value: data['ItemFileName']),
-          'ValuePer': PlutoCell(value: data['ValuePer']), // Ensure this field exists in your data
         },
       );
     }).toList();

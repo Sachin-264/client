@@ -1,3 +1,5 @@
+import 'package:client/PPS%20report/ppsdraft.dart';
+import 'package:client/PPS%20report/ppsdraftbloc.dart';
 import 'package:client/saleorder/sale_order_page_draft.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
@@ -114,9 +116,9 @@ class ComplaintPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider.value(
-                    value: BlocProvider.of<TargetDashboardBloc>(context),
-                    child:TargetDashboardPage(),
-                  ),
+                        value: BlocProvider.of<TargetDashboardBloc>(context),
+                        child: TargetDashboardPage(),
+                      ),
                     ),
                   );
                 },
@@ -136,7 +138,21 @@ class ComplaintPage extends StatelessWidget {
                   );
                 },
               ),
-
+              _createDrawerItem(
+                icon: Icons.local_shipping,
+                text: 'PDS report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: BlocProvider.of<PPSDraftPageBloc>(context),
+                        child: PPSDraftPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
               Divider(),
               _createDrawerItem(
                 icon: Icons.settings,
@@ -163,9 +179,11 @@ class ComplaintPage extends StatelessWidget {
                   'SNo': PlutoCell(value: complaint.sNo),
                   'ComplaintNo': PlutoCell(value: complaint.complaintNo),
                   'CustomerName': PlutoCell(value: complaint.accountName),
-                  'CustomerAddress': PlutoCell(value: complaint.customerAddress),
+                  'CustomerAddress':
+                      PlutoCell(value: complaint.customerAddress),
                   'Mobile': PlutoCell(value: complaint.customerMobileNo),
-                  'ComplaintDetails': PlutoCell(value: complaint.complaintDetails),
+                  'ComplaintDetails':
+                      PlutoCell(value: complaint.complaintDetails),
                   'Status': PlutoCell(value: complaint.isComplaintType),
                   'Action': PlutoCell(value: complaint.complaintNo),
                 });
@@ -173,13 +191,32 @@ class ComplaintPage extends StatelessWidget {
 
               return PlutoGrid(
                 columns: [
-                  PlutoColumn(title: 'SNo', field: 'SNo', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'ComplaintNo', field: 'ComplaintNo', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'Customer Name', field: 'CustomerName', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'Address', field: 'CustomerAddress', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'Mobile', field: 'Mobile', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'Complaint Details', field: 'ComplaintDetails', type: PlutoColumnType.text()),
-                  PlutoColumn(title: 'Status', field: 'Status', type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'SNo', field: 'SNo', type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'ComplaintNo',
+                      field: 'ComplaintNo',
+                      type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'Customer Name',
+                      field: 'CustomerName',
+                      type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'Address',
+                      field: 'CustomerAddress',
+                      type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'Mobile',
+                      field: 'Mobile',
+                      type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'Complaint Details',
+                      field: 'ComplaintDetails',
+                      type: PlutoColumnType.text()),
+                  PlutoColumn(
+                      title: 'Status',
+                      field: 'Status',
+                      type: PlutoColumnType.text()),
                   PlutoColumn(
                     title: 'Action',
                     field: 'Action',

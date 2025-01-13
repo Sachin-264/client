@@ -7,12 +7,10 @@ import 'selectpage_bloc.dart'; // Import your SelectPageBloc
 class SelectPage extends StatelessWidget {
   final String fromDate;
   final String toDate;
-  final String salesmanRecNo;
 
   const SelectPage({
     required this.fromDate,
     required this.toDate,
-    required this.salesmanRecNo,
   });
 
   @override
@@ -25,25 +23,25 @@ class SelectPage extends StatelessWidget {
           title: Text(
             '',
             style: TextStyle(
-              color: Colors.white, // White color for text
+              color: Colors.white,
             ),
           ),
           backgroundColor: Colors.blue,
-          automaticallyImplyLeading: false, // Remove default back button
+          automaticallyImplyLeading: false,
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Navigate back
+                Navigator.pop(context);
               },
               child: Row(
                 children: [
-                  Icon(Icons.arrow_back_ios, color: Colors.white), // Blue back icon
-                  SizedBox(width: 4), // Add spacing between icon and text
+                  Icon(Icons.arrow_back_ios, color: Colors.white),
+                  SizedBox(width: 4),
                   Text(
                     'Back',
                     style: TextStyle(
-                      color: Colors.white, // Blue color for text
-                      fontSize: 16, // Adjust font size
+                      color: Colors.white,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -60,18 +58,20 @@ class SelectPage extends StatelessWidget {
             } else if (state is SalesManDataLoaded) {
               final data = state.data;
 
-              // Define PlutoGrid columns
+              final filteredData = data.where((item) {
+                final targetValue = double.tryParse(item['TargeValue'] ?? '0') ?? 0;
+                final saleValue = double.tryParse(item['SaleValue'] ?? '0') ?? 0;
+                return targetValue != 0 || saleValue != 0;
+              }).toList();
+
               final columns = [
                 PlutoColumn(
                   title: 'Executive Name',
                   field: 'SalesManName',
                   type: PlutoColumnType.text(),
                   renderer: (rendererContext) {
-                    // Get the ViewLevel value from the row
                     final viewLevelStr = rendererContext.row.cells['ViewLevel']?.value.toString() ?? '0';
-                    // Convert ViewLevel to an integer (default to 0 if conversion fails)
                     final viewLevel = int.tryParse(viewLevelStr) ?? 0;
-                    // Calculate padding based on ViewLevel
                     final padding = EdgeInsets.only(left: 16.0 * viewLevel);
 
                     return Padding(
@@ -79,7 +79,7 @@ class SelectPage extends StatelessWidget {
                       child: Text(
                         rendererContext.row.cells['SalesManName']?.value.toString() ?? 'N/A',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold, // Optional: Add styling
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     );
@@ -113,13 +113,10 @@ class SelectPage extends StatelessWidget {
                   type: PlutoColumnType.text(),
                   textAlign: PlutoColumnTextAlign.right,
                   renderer: (rendererContext) {
-                    // Get the value from the cell
                     final value = rendererContext.cell.value.toString();
-
-                    // Append '%' to the value
                     return Text(
-                      '$value%', // Add % sign here
-                      textAlign: TextAlign.right, // Align text to the right
+                      '$value%',
+                      textAlign: TextAlign.right,
                     );
                   },
                 ),
@@ -130,12 +127,8 @@ class SelectPage extends StatelessWidget {
                   renderer: (rendererContext) {
                     return TextButton(
                       onPressed: () {
-                        // Navigate to the ItemPage with the selected salesman data
-                        print("Accessing data");
-                        print("From Date: $fromDate");
-                        print("To Date: $toDate");
-                        print("Salesman ID: $salesmanRecNo");
-
+                        final salesmanRecNo = rendererContext.row.cells['SalesManRecNo']?.value.toString() ?? '0';
+                        print(salesmanRecNo);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -157,11 +150,14 @@ class SelectPage extends StatelessWidget {
                 ),
               ];
 
-              // Prepare PlutoGrid rows
-              final rows = data.map((item) {
-                final targetValue = _formatNumber(item['TargeValue'] ?? '0');
-                final saleValue = _formatNumber(item['SaleValue'] ?? '0');
-                final valuePer = item['ValuePer'] ?? '0';
+              final rows = filteredData.map((item) {
+                final formattedTargetValue = _formatValuePer(item['TargeValue'] ?? '0');
+                final formattedSaleValue = _formatValuePer(item['SaleValue'] ?? '0');
+                final formattedValuePer = _formatValuePer(item['ValuePer'] ?? '0');
+
+                final targetValue = _formatNumber(formattedTargetValue);
+                final saleValue = _formatNumber(formattedSaleValue);
+                final valuePer = _formatNumber(formattedValuePer);
 
                 return PlutoRow(
                   cells: {
@@ -171,8 +167,9 @@ class SelectPage extends StatelessWidget {
                     'TargeValue': PlutoCell(value: targetValue),
                     'SaleValue': PlutoCell(value: saleValue),
                     'ValuePer': PlutoCell(value: valuePer),
-                    'ViewLevel': PlutoCell(value: item['ViewLevel'] ?? '0'), // Add ViewLevel to the row
-                    'Action': PlutoCell(value: 'Select'), // This value is not used due to custom renderer
+                    'ViewLevel': PlutoCell(value: item['ViewLevel'] ?? '0'),
+                    'SalesManRecNo': PlutoCell(value: item['SalesManRecNo'] ?? '0'), // Add SalesManRecNo to the row
+                    'Action': PlutoCell(value: 'Select'),
                   },
                 );
               }).toList();
@@ -181,7 +178,7 @@ class SelectPage extends StatelessWidget {
                 columns: columns,
                 rows: rows,
                 onLoaded: (PlutoGridOnLoadedEvent event) {
-                  event.stateManager.setShowColumnFilter(true); // Enable filtering
+                  event.stateManager.setShowColumnFilter(true);
                 },
                 configuration: PlutoGridConfiguration(
                   columnSize: PlutoGridColumnSizeConfig(
@@ -190,48 +187,48 @@ class SelectPage extends StatelessWidget {
                 ),
               );
             }
-            return Container(); // Initial state
+            return Container();
           },
         ),
       ),
     );
   }
 
-  // Helper method to format numbers with commas
   String _formatNumber(String number) {
     final parts = number.split('.');
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
-    // Check if the number is negative
     final isNegative = integerPart.startsWith('-');
     final digits = isNegative ? integerPart.substring(1) : integerPart;
 
-    // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
-    // Start from the end of the integer part
     for (int i = digits.length - 1; i >= 0; i--) {
       buffer.write(digits[i]);
       count++;
 
-      // Add a comma after every three digits from the right
       if (count == 3 && i != 0) {
         buffer.write(',');
         count = 0;
-      }
-      // After the first comma, add commas after every two digits
-      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+      } else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
         buffer.write(',');
         count = 0;
       }
     }
 
-    // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-
-    // Add the negative sign back if necessary
     return '${isNegative ? '-' : ''}$reversed$decimalPart';
+  }
+
+  // Helper function to add leading zero to values like ".67" or "-.88"
+  String _formatValuePer(String value) {
+    if (value.startsWith('-.')) {
+      return '-0${value.substring(1)}'; // Add leading zero after the negative sign
+    } else if (value.startsWith('.')) {
+      return '0$value'; // Add leading zero if the value starts with a dot
+    }
+    return value; // Return the original value if it's already formatted
   }
 }

@@ -5,10 +5,10 @@ import 'package:client/TargetDashboard/select_page.dart';
 import 'package:client/TargetDashboard/targetsale&viewallbloc.dart';
 
 class ViewAllPage extends StatelessWidget {
-
   final String salesmanRecNo;
 
-  const ViewAllPage({ required this.salesmanRecNo,});
+  const ViewAllPage({required this.salesmanRecNo});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +46,7 @@ class ViewAllPage extends StatelessWidget {
             } else if (state is TargetSaleError) {
               return Center(child: Text(state.message));
             } else if (state is TargetSaleLoaded) {
-              // Filter data up to the present month
+              // Filter data up to the current month
               final now = DateTime.now();
               final filteredData = state.data.where((item) {
                 final fromDate = _parseDate(item['FromDate']);
@@ -110,9 +110,14 @@ class ViewAllPage extends StatelessWidget {
               // Prepare PlutoGrid rows
               final rows = filteredData.map((item) {
                 final month = _getMonthKeyFromDate(item['FromDate'] ?? 'N/A');
-                final targetValue = _formatNumber(item['TargetValue'] ?? '0');
-                final saleValue = _formatNumber(item['SaleValue'] ?? '0');
-                final valuePer = item['ValuePer'] ?? '0';
+                final formattedTargetValue = _formatValuePer(item['TargeValue'] ?? '0');
+                final formattedSaleValue = _formatValuePer(item['SaleValue'] ?? '0');
+                final formattedValuePer = _formatValuePer(item['ValuePer'] ?? '0');
+
+                // Step 2: Apply _formatNumber to add commas
+                final targetValue = _formatNumber(formattedTargetValue);
+                final saleValue = _formatNumber(formattedSaleValue);
+                final valuePer =_formatNumber(formattedValuePer) ;
 
                 return PlutoRow(
                   cells: {
@@ -204,13 +209,12 @@ class ViewAllPage extends StatelessWidget {
         builder: (context) => SelectPage(
           fromDate: fromDate,
           toDate: toDate,
-          salesmanRecNo: salesmanRecNo,
         ),
       ),
     );
   }
 
-// Helper function to get the last day of the month
+  // Helper function to get the last day of the month
   String _getLastDayOfMonth(String month, String year) {
     // Map month names to month numbers
     final monthMap = {
@@ -227,41 +231,52 @@ class ViewAllPage extends StatelessWidget {
     return lastDay.toString();
   }
 
-  // Helper method to format numbers with commas every two digits
-  String _formatNumber(String number) {
-    final parts = number.split('.');
-    final integerPart = parts[0];
-    final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
-
-    // Check if the number is negative
-    final isNegative = integerPart.startsWith('-');
-    final digits = isNegative ? integerPart.substring(1) : integerPart;
-
-    // Add commas to the integer part
-    final buffer = StringBuffer();
-    int count = 0;
-
-    // Start from the end of the integer part
-    for (int i = digits.length - 1; i >= 0; i--) {
-      buffer.write(digits[i]);
-      count++;
-
-      // Add a comma after every three digits from the right
-      if (count == 3 && i != 0) {
-        buffer.write(',');
-        count = 0;
-      }
-      // After the first comma, add commas after every two digits
-      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
-        buffer.write(',');
-        count = 0;
-      }
+  // Helper function to add leading zero to values like ".67"
+  // Helper function to add leading zero to values like ".67" or "-.88"
+  String _formatValuePer(String value) {
+    if (value.startsWith('-.')) {
+      return '-0${value.substring(1)}'; // Add leading zero after the negative sign
+    } else if (value.startsWith('.')) {
+      return '0$value'; // Add leading zero if the value starts with a dot
     }
-
-    // Reverse the buffer to get the correct format
-    final reversed = buffer.toString().split('').reversed.join();
-
-    // Add the negative sign back if necessary
-    return '${isNegative ? '-' : ''}$reversed$decimalPart';
+    return value; // Return the original value if it's already formatted
   }
+}
+
+// Helper method to format numbers with commas
+String _formatNumber(String number) {
+  final parts = number.split('.');
+  final integerPart = parts[0];
+  final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+  // Check if the number is negative
+  final isNegative = integerPart.startsWith('-');
+  final digits = isNegative ? integerPart.substring(1) : integerPart;
+
+  // Add commas to the integer part
+  final buffer = StringBuffer();
+  int count = 0;
+
+  // Start from the end of the integer part
+  for (int i = digits.length - 1; i >= 0; i--) {
+    buffer.write(digits[i]);
+    count++;
+
+    // Add a comma after every three digits from the right
+    if (count == 3 && i != 0) {
+      buffer.write(',');
+      count = 0;
+    }
+    // After the first comma, add commas after every two digits
+    else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+      buffer.write(',');
+      count = 0;
+    }
+  }
+
+  // Reverse the buffer to get the correct format
+  final reversed = buffer.toString().split('').reversed.join();
+
+  // Add the negative sign back if necessary
+  return '${isNegative ? '-' : ''}$reversed$decimalPart';
 }

@@ -18,6 +18,7 @@ abstract class TargetDashboardState extends Equatable {
 }
 
 class TargetDashboardLoading extends TargetDashboardState {}
+
 class TargetDashboardLoaded extends TargetDashboardState {
   final List<Map<String, dynamic>> data;
   TargetDashboardLoaded(this.data);
@@ -25,6 +26,7 @@ class TargetDashboardLoaded extends TargetDashboardState {
   @override
   List<Object?> get props => [data];
 }
+
 class TargetDashboardError extends TargetDashboardState {
   final String message;
   TargetDashboardError(this.message);
@@ -45,9 +47,20 @@ class TargetDashboardBloc extends Bloc<TargetDashboardEvent, TargetDashboardStat
       ) async {
     emit(TargetDashboardLoading());
     try {
-      final response = await http.get(Uri.parse(
-          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=157.0&val2=01-Jan-2025&val3=05-Jan-2025&val4=&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetAllSalesManReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='
-      ));
+      // Generate from date (first day of the current month)
+      final DateTime now = DateTime.now();
+      final DateTime fromDate = DateTime(now.year, now.month, 1);
+      final String formattedFromDate = _formatDate(fromDate);
+
+      // Generate to date (current date)
+      final String formattedToDate = _formatDate(now);
+
+      // Construct the API URL with dynamic dates
+      final String apiUrl =
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=157.0&val2=$formattedFromDate&val3=$formattedToDate&val4=&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetAllSalesManReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==';
+
+      // Make the API call
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -59,5 +72,19 @@ class TargetDashboardBloc extends Bloc<TargetDashboardEvent, TargetDashboardStat
     } catch (e) {
       emit(TargetDashboardError('Error: $e'));
     }
+  }
+
+  // Helper function to format dates as "dd-MMM-yyyy"
+  String _formatDate(DateTime date) {
+    const List<String> months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    final String day = date.day.toString().padLeft(2, '0');
+    final String month = months[date.month - 1];
+    final String year = date.year.toString();
+
+    return '$day-$month-$year';
   }
 }

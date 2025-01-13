@@ -1,16 +1,18 @@
 import 'dart:developer';
+import 'package:client/PPS%20report/PPSreportbloc.dart';
+import 'package:client/PPS%20report/PPSreportpage.dart';
+import 'package:client/PPS%20report/ppsdraftbloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:client/saleorder/saleorderbloc.dart';
 import 'package:client/saleorder/saleorderpage.dart';
-import 'saleorderdraft_bloc.dart';
 
-class SaleOrderDraftPage extends StatefulWidget {
+class PPSDraftPage extends StatefulWidget {
   @override
-  _SaleOrderDraftPageState createState() => _SaleOrderDraftPageState();
+  _PPSDraftPageState createState() => _PPSDraftPageState();
 }
 
-class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
+class _PPSDraftPageState extends State<PPSDraftPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _salesmanNameController = TextEditingController();
@@ -38,7 +40,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
 
     // Fetch data
-    context.read<SaleOrderDraftBloc>().add(FetchData());
+    context.read<PPSDraftPageBloc>().add(FetchData());
   }
 
   @override
@@ -56,20 +58,20 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: BlocConsumer<SaleOrderDraftBloc, SaleOrderDraftState>(
+      body: BlocConsumer<PPSDraftPageBloc, PPSDraftPageState>(
         listener: (context, state) {
-          if (state is SaleOrderDraftError) {
+          if (state is PPSDraftPageError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
           }
         },
         builder: (context, state) {
-          if (state is SaleOrderDraftLoading) {
+          if (state is PPSDraftPageLoading) {
             return _buildLoader();
-          } else if (state is SaleOrderDraftLoaded) {
+          } else if (state is PPSDraftPageLoaded) {
             return _buildForm(state);
-          } else if (state is SaleOrderDraftError) {
+          } else if (state is PPSDraftPageError) {
             return _buildErrorState(state.message);
           }
           return Center(child: Text('Unknown state'));
@@ -80,7 +82,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text('Sale Order Draft', style: TextStyle(color: Colors.white)),
+      title: Text('PDS Report Filter', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.blue,
       actions: [
         IconButton(
@@ -110,7 +112,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     );
   }
 
-  Widget _buildForm(SaleOrderDraftLoaded state) {
+  Widget _buildForm(PPSDraftPageLoaded state) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Form(
@@ -442,18 +444,18 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
 
     // Prepare filter parameters
     final Map<String, String> filters = {
-      'userId': '157.0',
+      // 'userId': '157.0',
       'branchCode': _selectedBranch ?? '',
-      'addUser': '',
+      // 'addUser': '',
       'fromDate': _fromDateController.text,
       'toDate': _toDateController.text,
-      'customerCode':
-          _selectedCustomerCode ?? '', // Use the stored customer code
-      'soNoRecNo': _selectedCategory ?? '1',
-      'qNo': '',
-      'accountTypeCode': '',
-      'groupName': 'Project',
-      'itemCode': _selectedItemCode ?? '', // Use the stored item code
+      // 'customerCode':
+      //     _selectedCustomerCode ?? '', // Use the stored customer code
+      // 'soNoRecNo': _selectedCategory ?? '1',
+      // 'qNo': '',
+      // 'accountTypeCode': '',
+      // 'groupName': 'Project',
+      // 'itemCode': _selectedItemCode ?? '', // Use the stored item code
     };
 
     // Print the filter data to the console
@@ -467,8 +469,8 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
-          value: context.read<SaleOrderBloc>(),
-          child: SaleOrderPage(filters: filters),
+          value: context.read<PpsReportBloc>(),
+          child: PpsReportPage(filters: filters),
         ),
       ),
     );

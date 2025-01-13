@@ -4,25 +4,26 @@ import 'dart:convert';
 import 'dart:async';
 
 // Events
-abstract class SaleOrderDraftEvent {}
+abstract class PPSDraftPageEvent {}
 
-class FetchData extends SaleOrderDraftEvent {}
+class FetchData extends PPSDraftPageEvent {}
 
 // States
-abstract class SaleOrderDraftState {}
+abstract class PPSDraftPageState {}
 
-class SaleOrderDraftInitial extends SaleOrderDraftState {}
+class PPSDraftPageInitial extends PPSDraftPageState {}
 
-class SaleOrderDraftLoading extends SaleOrderDraftState {}
+class PPSDraftPageLoading extends PPSDraftPageState {}
 
-class SaleOrderDraftLoaded extends SaleOrderDraftState {
+class PPSDraftPageLoaded extends PPSDraftPageState {
   final List<Map<String, String>> branches;
-  final List<Map<String, String>> categories; // Changed to List<Map<String, String>>
+  final List<Map<String, String>>
+      categories; // Changed to List<Map<String, String>>
   final List<Map<String, String>> customers;
   final List<String> salesmanNames;
   final List<Map<String, String>> items;
 
-  SaleOrderDraftLoaded({
+  PPSDraftPageLoaded({
     required this.branches,
     required this.categories,
     required this.customers,
@@ -31,25 +32,27 @@ class SaleOrderDraftLoaded extends SaleOrderDraftState {
   });
 
   @override
-  List<Object> get props => [branches, categories, customers, salesmanNames, items];
+  List<Object> get props =>
+      [branches, categories, customers, salesmanNames, items];
 }
 
-class SaleOrderDraftError extends SaleOrderDraftState {
+class PPSDraftPageError extends PPSDraftPageState {
   final String message;
-  SaleOrderDraftError(this.message);
+  PPSDraftPageError(this.message);
 
   @override
   List<Object> get props => [message];
 }
 
 // BLoC
-class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> {
-  SaleOrderDraftBloc() : super(SaleOrderDraftInitial()) {
+class PPSDraftPageBloc extends Bloc<PPSDraftPageEvent, PPSDraftPageState> {
+  PPSDraftPageBloc() : super(PPSDraftPageInitial()) {
     on<FetchData>(_onFetchData);
   }
 
-  Future<void> _onFetchData(FetchData event, Emitter<SaleOrderDraftState> emit) async {
-    emit(SaleOrderDraftLoading());
+  Future<void> _onFetchData(
+      FetchData event, Emitter<PPSDraftPageState> emit) async {
+    emit(PPSDraftPageLoading());
 
     try {
       final results = await Future.wait([
@@ -61,11 +64,15 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       ]);
 
       // Cast the results to the correct types
-      final List<Map<String, String>> branches = results[0] as List<Map<String, String>>;
-      final List<Map<String, String>> categories = results[1] as List<Map<String, String>>; // Updated type
-      final List<Map<String, String>> customers = results[2] as List<Map<String, String>>;
+      final List<Map<String, String>> branches =
+          results[0] as List<Map<String, String>>;
+      final List<Map<String, String>> categories =
+          results[1] as List<Map<String, String>>; // Updated type
+      final List<Map<String, String>> customers =
+          results[2] as List<Map<String, String>>;
       final List<String> salesmanNames = results[3] as List<String>;
-      final List<Map<String, String>> items = results[4] as List<Map<String, String>>;
+      final List<Map<String, String>> items =
+          results[4] as List<Map<String, String>>;
 
       // Debugging: Print fetched data
       // print('Branches: $branches');
@@ -74,7 +81,7 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Salesman Names: $salesmanNames');
       // print('Items: $items');
 
-      emit(SaleOrderDraftLoaded(
+      emit(PPSDraftPageLoaded(
         branches: branches,
         categories: categories,
         customers: customers,
@@ -83,13 +90,14 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       ));
     } catch (e) {
       print('Error fetching data: $e'); // Debugging: Print error
-      emit(SaleOrderDraftError('Failed to fetch data: $e'));
+      emit(PPSDraftPageError('Failed to fetch data: $e'));
     }
   }
 
   Future<List<Map<String, String>>> _fetchBranchNames() async {
     try {
-      final response = await http.get(Uri.parse('https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetBranchName&ucode=157.0&ccode=0.0&val1=157.0&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
+      final response = await http.get(Uri.parse(
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetBranchName&ucode=157.0&ccode=0.0&val1=157.0&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
 
       // Debugging: Print raw response body
       // print('Raw Branch Names API Response: ${response.body}');
@@ -101,10 +109,12 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Decoded Branch Names Data: $data');
 
       // Convert the JSON object into a List<Map<String, String>>
-      final List<Map<String, String>> branchList = List<Map<String, String>>.from(data.map((item) {
+      final List<Map<String, String>> branchList =
+          List<Map<String, String>>.from(data.map((item) {
         return {
           'name': item['FieldName']?.toString() ?? '',
-          'code': item['FieldID']?.toString() ?? '', // Only use FieldId, no fallback to FieldName
+          'code': item['FieldID']?.toString() ??
+              '', // Only use FieldId, no fallback to FieldName
         };
       }));
 
@@ -123,7 +133,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
 
   Future<List<Map<String, String>>> _fetchCategories() async {
     try {
-      final response = await http.get(Uri.parse('https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetSOTypeName&ucode=157.0&ccode=0.0&val1=E&val2=SO&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
+      final response = await http.get(Uri.parse(
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetSOTypeName&ucode=157.0&ccode=0.0&val1=E&val2=SO&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
 
       // Debugging: Print raw response body
       // print('Raw Categories API Response: ${response.body}');
@@ -135,7 +146,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Decoded Categories Data: $data');
 
       // Convert the JSON object into a List<Map<String, String>>
-      final List<Map<String, String>> categoryList = List<Map<String, String>>.from(data.map((item) {
+      final List<Map<String, String>> categoryList =
+          List<Map<String, String>>.from(data.map((item) {
         return {
           'code': item['FieldID']?.toString() ?? '', // Store FieldID
           'name': item['FieldName']?.toString() ?? '', // Store FieldName
@@ -158,7 +170,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
 
   Future<List<Map<String, String>>> _fetchCustomerNames() async {
     try {
-      final response = await http.get(Uri.parse('https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetBusinessDirectoryName&ucode=157.0&ccode=0.0&val1=E&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
+      final response = await http.get(Uri.parse(
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetBusinessDirectoryName&ucode=157.0&ccode=0.0&val1=E&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
 
       // Debugging: Print raw response body
       // print('Raw Customer Names API Response: ${response.body}');
@@ -170,7 +183,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Decoded Customer Names Data: $data');
 
       // Convert the JSON object into a List<Map<String, String>>
-      final List<Map<String, String>> customerList = List<Map<String, String>>.from(data.map((item) {
+      final List<Map<String, String>> customerList =
+          List<Map<String, String>>.from(data.map((item) {
         return {
           'name': item['FieldName']?.toString() ?? '',
           'code': item['FieldCode']?.toString() ?? '',
@@ -193,7 +207,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
 
   Future<List<String>> _fetchSalesmanNames() async {
     try {
-      final response = await http.get(Uri.parse('https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetCommonTableData1&ucode=157.0&ccode=0.0&val1=SalesManMaster&val2=SalesManName&val3=RecNo&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
+      final response = await http.get(Uri.parse(
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetCommonTableData1&ucode=157.0&ccode=0.0&val1=SalesManMaster&val2=SalesManName&val3=RecNo&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
 
       // Debugging: Print raw response body
       // print('Raw Salesman Names API Response: ${response.body}');
@@ -205,7 +220,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Decoded Salesman Names Data: $data');
 
       // Convert the JSON object into a List<String>
-      return List<String>.from(data.map((item) => item['FieldName']?.toString() ?? ''));
+      return List<String>.from(
+          data.map((item) => item['FieldName']?.toString() ?? ''));
     } catch (e) {
       print('Error in _fetchSalesmanNames: $e'); // Debugging: Print error
       rethrow;
@@ -214,7 +230,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
 
   Future<List<Map<String, String>>> _fetchItemNames() async {
     try {
-      final response = await http.get(Uri.parse('https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetItemName1&ucode=157.0&ccode=0.0&val1=E&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
+      final response = await http.get(Uri.parse(
+          'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?type=sp_GetItemName1&ucode=157.0&ccode=0.0&val1=E&val2=&val3=&val4=&val5=&val6=&val8=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ=='));
 
       // Debugging: Print raw response body
       // print('Raw Item Names API Response: ${response.body}');
@@ -226,7 +243,8 @@ class SaleOrderDraftBloc extends Bloc<SaleOrderDraftEvent, SaleOrderDraftState> 
       // print('Decoded Item Names Data: $data');
 
       // Convert the JSON object into a List<Map<String, String>>
-      final List<Map<String, String>> itemList = List<Map<String, String>>.from(data.map((item) {
+      final List<Map<String, String>> itemList =
+          List<Map<String, String>>.from(data.map((item) {
         return {
           'name': item['FieldName']?.toString() ?? '',
           'code': item['FieldCode']?.toString() ?? '',

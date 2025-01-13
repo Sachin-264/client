@@ -165,7 +165,7 @@ class TargetSalePage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate, salesmanRecNo: salesmanRecNo,),
+            builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate,),
           ),
         );
       },
