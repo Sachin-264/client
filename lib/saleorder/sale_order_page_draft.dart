@@ -35,12 +35,10 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     // Set default From Date to the 1st day of the current month
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    _fromDateController.text =
-        "${firstDayOfMonth.day.toString().padLeft(2, '0')}/${firstDayOfMonth.month.toString().padLeft(2, '0')}/${firstDayOfMonth.year}";
+    _fromDateController.text = _formatDate(firstDayOfMonth);
 
     // Set default To Date to the current date
-    _toDateController.text =
-        "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
+    _toDateController.text = _formatDate(now);
 
     // Fetch data
     context.read<SaleOrderDraftBloc>().add(FetchData());
@@ -130,9 +128,9 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
               SizedBox(height: 20),
               _buildCustomerAutocomplete(state.customers),
               SizedBox(height: 20),
-              _buildSalesmanAutocomplete(state.salesmanNames),
+              // _buildSalesmanAutocomplete(state.salesmanNames),
               SizedBox(height: 20),
-              _buildItemAutocomplete(state.items),
+              // _buildItemAutocomplete(state.items),
               SizedBox(height: 20),
               _buildDateRangeFields(),
               SizedBox(height: 30),
@@ -203,38 +201,38 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     );
   }
 
-  Widget _buildSalesmanAutocomplete(List<String> salesmanNames) {
-    return _buildAutocompleteField(
-      key: _salesmanAutocompleteKey, // Pass the key
-      controller: _salesmanNameController,
-      label: 'Salesman Name',
-      options:
-          salesmanNames.map((name) => {'name': name, 'code': name}).toList(),
-      onSelected: (code) {
-        setState(() {
-          _salesmanNameController.text = code ?? '';
-          _saleOrderNoController.clear();
-        });
-      },
-    );
-  }
+  // Widget _buildSalesmanAutocomplete(List<String> salesmanNames) {
+  //   return _buildAutocompleteField(
+  //     key: _salesmanAutocompleteKey, // Pass the key
+  //     controller: _salesmanNameController,
+  //     label: 'Salesman Name',
+  //     options:
+  //         salesmanNames.map((name) => {'name': name, 'code': name}).toList(),
+  //     onSelected: (code) {
+  //       setState(() {
+  //         _salesmanNameController.text = code ?? '';
+  //         _saleOrderNoController.clear();
+  //       });
+  //     },
+  //   );
+  // }
 
-  Widget _buildItemAutocomplete(List<Map<String, String>> items) {
-    return _buildAutocompleteField(
-      key: _itemAutocompleteKey, // Pass the key
-      controller: _itemNameController,
-      label: 'Item Name',
-      options: items,
-      onSelected: (code) {
-        setState(() {
-          _selectedItemCode = code;
-          _itemNameController.text =
-              items.firstWhere((item) => item['code'] == code)['name'] ?? '';
-          _saleOrderNoController.clear();
-        });
-      },
-    );
-  }
+  // Widget _buildItemAutocomplete(List<Map<String, String>> items) {
+  //   return _buildAutocompleteField(
+  //     key: _itemAutocompleteKey, // Pass the key
+  //     controller: _itemNameController,
+  //     label: 'Item Name',
+  //     options: items,
+  //     onSelected: (code) {
+  //       setState(() {
+  //         _selectedItemCode = code;
+  //         _itemNameController.text =
+  //             items.firstWhere((item) => item['code'] == code)['name'] ?? '';
+  //         _saleOrderNoController.clear();
+  //       });
+  //     },
+  //   );
+  // }
 
   Widget _buildDateRangeFields() {
     return Row(
@@ -393,11 +391,45 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         lastDate: DateTime(2101),
       );
       if (picked != null) {
-        controller.text =
-            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+        controller.text = _formatDate(picked);
       }
     } catch (e) {
       log('Error selecting date: $e');
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}-${_getMonthAbbreviation(date.month)}-${date.year}";
+  }
+
+  String _getMonthAbbreviation(int month) {
+    switch (month) {
+      case 1:
+        return 'Jan';
+      case 2:
+        return 'Feb';
+      case 3:
+        return 'Mar';
+      case 4:
+        return 'Apr';
+      case 5:
+        return 'May';
+      case 6:
+        return 'Jun';
+      case 7:
+        return 'Jul';
+      case 8:
+        return 'Aug';
+      case 9:
+        return 'Sep';
+      case 10:
+        return 'Oct';
+      case 11:
+        return 'Nov';
+      case 12:
+        return 'Dec';
+      default:
+        return '';
     }
   }
 
@@ -466,8 +498,8 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
       'userId': '157.0',
       'branchCode': _selectedBranch ?? '',
       'addUser': '',
-      'fromDate': _fromDateController.text,
-      'toDate': _toDateController.text,
+      'fromDate': _fromDateController.text, // Already in "01-Jan-2025" format
+      'toDate': _toDateController.text, // Already in "01-Jan-2025" format
       'customerCode': _selectedCustomerCode ?? '',
       'soNoRecNo': _selectedCategory ?? '',
       'saleOrderNo': _saleOrderNoController.text,

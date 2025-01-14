@@ -64,10 +64,6 @@ class PpsReportGrid extends StatelessWidget {
             columns: _buildColumns(),
             rows: _buildRows(state.reports),
             configuration: PlutoGridConfiguration(
-              // style: PlutoGridStyleConfig(
-              //   gridBorderColor: Colors.grey,
-              //   gridBackgroundColor: Colors.white,
-              // ),
               columnFilter: PlutoGridColumnFilterConfig(
                 filters: const [
                   ...FilterHelper
@@ -109,22 +105,18 @@ class PpsReportGrid extends StatelessWidget {
         field: 'customerName',
         type: PlutoColumnType.text(),
       ),
-      // New GrandTotal Column
       PlutoColumn(
         title: 'Grand Total',
         field: 'grandTotal',
         type: PlutoColumnType.number(), // Use number type for alignment
-        // enableEditing: false, // Disable editing
         textAlign: PlutoColumnTextAlign.right, // Right-align the text
         renderer: (rendererContext) {
           final value = rendererContext.row.cells['grandTotal']?.value;
           // Format the value to show up to 2 decimal points
-
-          final formattValue = value != null
-              ? double.parse(value.toString()).toStringAsFixed(2)
-              : 'N/A';
-          final formattedValue =
-              value != null ? _formatNumber(formattValue.toString()) : 'N/A';
+          final cleanedValue = value != null
+              ? value.toString().replaceAll(',', '')
+              : '0'; // Default to '0' if null
+          final formattedValue = _formatNumber(cleanedValue);
           return Text(
             formattedValue,
             textAlign: TextAlign.right, // Ensure text is right-aligned
@@ -187,6 +179,11 @@ class PpsReportGrid extends StatelessWidget {
         type: PlutoColumnType.text(),
       ),
       PlutoColumn(
+        title: 'Salesman Name',
+        field: 'salesmanName',
+        type: PlutoColumnType.text(),
+      ),
+      PlutoColumn(
         title: 'Status',
         field: 'status',
         type: PlutoColumnType.text(),
@@ -209,17 +206,34 @@ class PpsReportGrid extends StatelessWidget {
           );
         },
       ),
-      PlutoColumn(
-        title: 'Salesman Name',
-        field: 'salesmanName',
-        type: PlutoColumnType.text(),
-      ),
     ];
   }
 
   // Convert API data to PlutoRow format
   List<PlutoRow> _buildRows(List<Map<String, dynamic>> reports) {
-    return reports.asMap().entries.map((entry) {
+    // Calculate the total value of GrandTotal
+    double totalValue = 0;
+    for (var report in reports) {
+      final value = report['GrandTotal'] ?? '0';
+      // Remove commas from the value before parsing
+      final cleanedValue = value.toString().replaceAll(',', '');
+
+      // Debugging: Print the cleaned value being parsed
+      print('Cleaned GrandTotal Value: $cleanedValue');
+
+      try {
+        totalValue += double.parse(cleanedValue);
+      } catch (e) {
+        // Debugging: Print an error if parsing fails
+        print('Error parsing GrandTotal: $cleanedValue');
+      }
+    }
+
+    // Debugging: Print the total value
+    print('Total GrandTotal: $totalValue');
+
+    // Build rows for reports
+    final rows = reports.asMap().entries.map((entry) {
       final index = entry.key;
       final report = entry.value;
       return PlutoRow(
@@ -228,8 +242,7 @@ class PpsReportGrid extends StatelessWidget {
           'saleOrderNo': PlutoCell(value: report['SaleOrderNo'] ?? 'N/A'),
           'saleOrderDate': PlutoCell(value: report['AddDate'] ?? 'N/A'),
           'customerName': PlutoCell(value: report['AccountName'] ?? 'N/A'),
-          'grandTotal':
-              PlutoCell(value: report['GrandTotal'] ?? 'N/A'), // Add GrandTotal
+          'grandTotal': PlutoCell(value: report['GrandTotal'] ?? 'N/A'),
           'deliveryDate': PlutoCell(value: report['DeliveryDate'] ?? 'N/A'),
           'desiredDate': PlutoCell(value: report['DesiredDate'] ?? 'N/A'),
           'pds1Date': PlutoCell(value: report['PDS1Date'] ?? 'N/A'),
@@ -241,13 +254,43 @@ class PpsReportGrid extends StatelessWidget {
           'pds3Date': PlutoCell(value: report['PDS3Date'] ?? 'N/A'),
           'employeeName3': PlutoCell(value: report['EmployeeName3'] ?? 'N/A'),
           'pds3Remarks': PlutoCell(value: report['PDS3Remarks'] ?? 'N/A'),
-          'status': PlutoCell(value: 'Select'),
           'salesmanName': PlutoCell(value: report['SalesManName'] ?? 'N/A'),
+          'status': PlutoCell(value: 'Select'),
         },
       );
     }).toList();
+
+    // Add a footer row for the total value
+    rows.add(
+      PlutoRow(
+        cells: {
+          'sno': PlutoCell(value: 'Total'),
+          'saleOrderNo': PlutoCell(value: ''),
+          'saleOrderDate': PlutoCell(value: ''),
+          'customerName': PlutoCell(value: ''),
+          'grandTotal': PlutoCell(value: totalValue),
+          // PlutoCell(value: _formatNumber(totalValue.toStringAsFixed(2))),
+          'deliveryDate': PlutoCell(value: ''),
+          'desiredDate': PlutoCell(value: ''),
+          'pds1Date': PlutoCell(value: ''),
+          'employeeName1': PlutoCell(value: ''),
+          'pds1Remarks': PlutoCell(value: ''),
+          'pds2Date': PlutoCell(value: ''),
+          'employeeName2': PlutoCell(value: ''),
+          'pds2Remarks': PlutoCell(value: ''),
+          'pds3Date': PlutoCell(value: ''),
+          'employeeName3': PlutoCell(value: ''),
+          'pds3Remarks': PlutoCell(value: ''),
+          'salesmanName': PlutoCell(value: ''),
+          'status': PlutoCell(value: ''),
+        },
+      ),
+    );
+
+    return rows;
   }
 
+  // Format number with commas
   String _formatNumber(String number) {
     final parts = number.split('.');
     final integerPart = parts[0];

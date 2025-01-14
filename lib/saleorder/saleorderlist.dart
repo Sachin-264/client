@@ -62,11 +62,14 @@ class SaleOrderList extends StatelessWidget {
         type: PlutoColumnType.text(),
         renderer: (rendererContext) {
           final value = rendererContext.cell.value;
-          final formattValue = value != null
-              ? double.parse(value.toString()).toStringAsFixed(2)
+          // Remove commas from the value before parsing
+          final cleanedValue = value.toString().replaceAll(',', '');
+          final formattValue = cleanedValue != null
+              ? double.parse(cleanedValue).toStringAsFixed(2)
               : 'N/A';
-          final formattedValue =
-              value != null ? _formatNumber(formattValue.toString()) : 'N/A';
+          final formattedValue = cleanedValue != null
+              ? _formatNumber(formattValue.toString())
+              : 'N/A';
           return Text(
             formattedValue,
             textAlign: TextAlign.right, // Ensure text is right-aligned
@@ -116,13 +119,26 @@ class SaleOrderList extends StatelessWidget {
 
   // Convert saleOrders data to PlutoRow format
   List<PlutoRow> _buildRows(List<Map<String, dynamic>> saleOrders) {
-    return saleOrders.map((saleOrder) {
+    // Calculate the total value
+    double totalValue = 0;
+    for (var saleOrder in saleOrders) {
+      final value = saleOrder['GrandTotal'] ?? '0';
+      // Remove commas from the value before parsing
+      final cleanedValue = value.toString().replaceAll(',', '');
+      totalValue += double.parse(cleanedValue);
+    }
+
+    // Build rows for sale orders
+    final rows = saleOrders.map((saleOrder) {
+      final value = saleOrder['GrandTotal'] ?? 'N/A';
+      // Remove commas from the value before parsing
+      final cleanedValue = value.toString().replaceAll(',', '');
       return PlutoRow(
         cells: {
           'SaleOrderDate': PlutoCell(value: saleOrder['PostingDate'] ?? 'N/A'),
           'SaleOrderNo': PlutoCell(value: saleOrder['SaleOrderNo'] ?? 'N/A'),
           'PartyName': PlutoCell(value: saleOrder['AccountName'] ?? 'N/A'),
-          'Value': PlutoCell(value: saleOrder['GrandTotal'] ?? 'N/A'),
+          'Value': PlutoCell(value: cleanedValue), // Use cleaned value
           'Salesman': PlutoCell(value: saleOrder['SalesManName'] ?? 'N/A'),
           'CreatedBy': PlutoCell(value: saleOrder['CreatedBy'] ?? 'N/A'),
           'CreatedOn': PlutoCell(value: saleOrder['AddDate'] ?? 'N/A'),
@@ -130,8 +146,28 @@ class SaleOrderList extends StatelessWidget {
         },
       );
     }).toList();
+
+    // Add a footer row for the total value
+    rows.add(
+      PlutoRow(
+        cells: {
+          'SaleOrderDate': PlutoCell(value: 'Total'),
+          'SaleOrderNo': PlutoCell(value: ''),
+          'PartyName': PlutoCell(value: ''),
+          'Value':
+              PlutoCell(value: _formatNumber(totalValue.toStringAsFixed(2))),
+          'Salesman': PlutoCell(value: ''),
+          'CreatedBy': PlutoCell(value: ''),
+          'CreatedOn': PlutoCell(value: ''),
+          'Action': PlutoCell(value: ''),
+        },
+      ),
+    );
+
+    return rows;
   }
 
+  // Format number with commas
   String _formatNumber(String number) {
     final parts = number.split('.');
     final integerPart = parts[0];
