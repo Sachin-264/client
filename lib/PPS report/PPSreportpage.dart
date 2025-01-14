@@ -15,13 +15,34 @@ class PpsReportPage extends StatelessWidget {
           PpsReportBloc()..add(FetchPpsReport(filters: filters)),
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.blue,
           title: Text(
-            'PDS Reports',
+            'PDS Report Filter',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.white, // White color for text
             ),
           ),
+          backgroundColor: Colors.blue,
+          automaticallyImplyLeading: false, // Remove default back button
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Navigate back
+              },
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_back_ios, color: Colors.white), // Back icon
+                  SizedBox(width: 4), // Add spacing between icon and text
+                  Text(
+                    'Back',
+                    style: TextStyle(
+                      color: Colors.white, // White color for text
+                      fontSize: 16, // Adjust font size
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         body: PpsReportGrid(),
       ),
@@ -87,6 +108,28 @@ class PpsReportGrid extends StatelessWidget {
         title: 'Customer Name',
         field: 'customerName',
         type: PlutoColumnType.text(),
+      ),
+      // New GrandTotal Column
+      PlutoColumn(
+        title: 'Grand Total',
+        field: 'grandTotal',
+        type: PlutoColumnType.number(), // Use number type for alignment
+        // enableEditing: false, // Disable editing
+        textAlign: PlutoColumnTextAlign.right, // Right-align the text
+        renderer: (rendererContext) {
+          final value = rendererContext.row.cells['grandTotal']?.value;
+          // Format the value to show up to 2 decimal points
+
+          final formattValue = value != null
+              ? double.parse(value.toString()).toStringAsFixed(2)
+              : 'N/A';
+          final formattedValue =
+              value != null ? _formatNumber(formattValue.toString()) : 'N/A';
+          return Text(
+            formattedValue,
+            textAlign: TextAlign.right, // Ensure text is right-aligned
+          );
+        },
       ),
       PlutoColumn(
         title: 'Delivery Date',
@@ -185,6 +228,8 @@ class PpsReportGrid extends StatelessWidget {
           'saleOrderNo': PlutoCell(value: report['SaleOrderNo'] ?? 'N/A'),
           'saleOrderDate': PlutoCell(value: report['AddDate'] ?? 'N/A'),
           'customerName': PlutoCell(value: report['AccountName'] ?? 'N/A'),
+          'grandTotal':
+              PlutoCell(value: report['GrandTotal'] ?? 'N/A'), // Add GrandTotal
           'deliveryDate': PlutoCell(value: report['DeliveryDate'] ?? 'N/A'),
           'desiredDate': PlutoCell(value: report['DesiredDate'] ?? 'N/A'),
           'pds1Date': PlutoCell(value: report['PDS1Date'] ?? 'N/A'),
@@ -201,5 +246,42 @@ class PpsReportGrid extends StatelessWidget {
         },
       );
     }).toList();
+  }
+
+  String _formatNumber(String number) {
+    final parts = number.split('.');
+    final integerPart = parts[0];
+    final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
+    // Add commas to the integer part
+    final buffer = StringBuffer();
+    int count = 0;
+
+    // Start from the end of the integer part
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
+      count++;
+
+      // Add a comma after every three digits from the right
+      if (count == 3 && i != 0) {
+        buffer.write(',');
+        count = 0;
+      }
+      // After the first comma, add commas after every two digits
+      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+        buffer.write(',');
+        count = 0;
+      }
+    }
+
+    // Reverse the buffer to get the correct format
+    final reversed = buffer.toString().split('').reversed.join();
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }

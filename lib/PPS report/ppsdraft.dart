@@ -21,6 +21,11 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
   final TextEditingController _toDateController = TextEditingController();
   final TextEditingController _saleOrderNoController = TextEditingController();
 
+  // Keys for Autocomplete widgets
+  Key _customerAutocompleteKey = UniqueKey();
+  Key _salesmanAutocompleteKey = UniqueKey();
+  Key _itemAutocompleteKey = UniqueKey();
+
   String? _selectedBranch;
   String? _selectedCategory;
   String? _selectedCustomerCode; // Store customer code
@@ -82,8 +87,9 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text('PDS Report Filter', style: TextStyle(color: Colors.white)),
+      title: Text('PDS Report', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.blue,
+      iconTheme: IconThemeData(color: Colors.white),
       actions: [
         IconButton(
           icon: Icon(Icons.add, color: Colors.white),
@@ -173,17 +179,24 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
           _saleOrderNoController.clear();
         });
       },
+      validator: (value) {
+        if (_saleOrderNoController.text.isNotEmpty) {
+          return null;
+        }
+        return value == null ? 'Please select Select Category' : null;
+      },
     );
   }
 
   Widget _buildCustomerAutocomplete(List<Map<String, String>> customers) {
     return _buildAutocompleteField(
+      key: _customerAutocompleteKey, // Pass the key
       controller: _customerNameController,
       label: 'Customer Name',
       options: customers,
       onSelected: (code) {
         setState(() {
-          _selectedCustomerCode = code; // Store the selected customer code
+          _selectedCustomerCode = code;
           _customerNameController.text =
               customers.firstWhere((item) => item['code'] == code)['name'] ??
                   '';
@@ -195,25 +208,29 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   Widget _buildSalesmanAutocomplete(List<String> salesmanNames) {
     return _buildAutocompleteField(
+      key: _salesmanAutocompleteKey, // Pass the key
       controller: _salesmanNameController,
       label: 'Salesman Name',
       options:
           salesmanNames.map((name) => {'name': name, 'code': name}).toList(),
       onSelected: (code) {
-        _salesmanNameController.text = code ?? '';
-        _saleOrderNoController.clear();
+        setState(() {
+          _salesmanNameController.text = code ?? '';
+          _saleOrderNoController.clear();
+        });
       },
     );
   }
 
   Widget _buildItemAutocomplete(List<Map<String, String>> items) {
     return _buildAutocompleteField(
+      key: _itemAutocompleteKey, // Pass the key
       controller: _itemNameController,
       label: 'Item Name',
       options: items,
       onSelected: (code) {
         setState(() {
-          _selectedItemCode = code; // Store the selected item code
+          _selectedItemCode = code;
           _itemNameController.text =
               items.firstWhere((item) => item['code'] == code)['name'] ?? '';
           _saleOrderNoController.clear();
@@ -248,7 +265,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
       ),
       onChanged: (value) {
         if (value.isNotEmpty) {
-          _clearOtherFields();
+          _clearOtherFieldsExceptBranchAndDates(); // Clear other fields and reset Autocomplete widgets
         }
       },
     );
@@ -281,6 +298,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
     String? value,
     required List<Map<String, String>> items,
     required ValueChanged<String?> onChanged,
+    FormFieldValidator<String>? validator,
   }) {
     return DropdownButtonFormField<String>(
       value: value,
@@ -298,17 +316,19 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         border: UnderlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
-      validator: (value) => value == null ? 'Please select $label' : null,
+      validator: validator,
     );
   }
 
   Widget _buildAutocompleteField({
+    Key? key,
     required TextEditingController controller,
     required String label,
     required List<Map<String, String>> options,
     required Function(String?) onSelected,
   }) {
     return Autocomplete<String>(
+      key: key, // Use the provided key
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text.isEmpty)
           return const Iterable<String>.empty();
@@ -409,62 +429,61 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   void _resetForm() {
     setState(() {
+      // Clear all text fields
       _customerNameController.clear();
       _salesmanNameController.clear();
       _itemNameController.clear();
       _fromDateController.clear();
       _toDateController.clear();
       _saleOrderNoController.clear();
-      _selectedBranch = null;
-      _selectedCategory = null;
-      _selectedCustomerCode = null; // Reset customer code
-      _selectedItemCode = null; // Reset item code
-    });
-  }
 
-  void _clearOtherFields() {
-    setState(() {
-      _customerNameController.clear();
-      _salesmanNameController.clear();
-      _itemNameController.clear();
-      _fromDateController.clear();
-      _toDateController.clear();
+      // Clear all selected values
       _selectedBranch = null;
       _selectedCategory = null;
-      _selectedCustomerCode = null; // Clear customer code
-      _selectedItemCode = null; // Clear item code
+      _selectedCustomerCode = null;
+      _selectedItemCode = null;
+
+      // Update keys to force Autocomplete widgets to rebuild
+      _customerAutocompleteKey = UniqueKey();
+      _salesmanAutocompleteKey = UniqueKey();
+      _itemAutocompleteKey = UniqueKey();
+
+      // Debug logs to verify keys are updated
+      log('Customer Autocomplete Key: $_customerAutocompleteKey');
+      log('Salesman Autocomplete Key: $_salesmanAutocompleteKey');
+      log('Item Autocomplete Key: $_itemAutocompleteKey');
     });
+
+    // Debug logs for controllers
+    log('Customer Name Controller: ${_customerNameController.text}');
+    log('Salesman Name Controller: ${_salesmanNameController.text}');
+    log('Item Name Controller: ${_itemNameController.text}');
   }
 
   void _navigateToSaleOrderPage() {
-    // Check if the form is valid
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // Prepare filter parameters
     final Map<String, String> filters = {
-      // 'userId': '157.0',
+      'userId': '157.0',
       'branchCode': _selectedBranch ?? '',
-      // 'addUser': '',
+      'addUser': '',
       'fromDate': _fromDateController.text,
       'toDate': _toDateController.text,
-      // 'customerCode':
-      //     _selectedCustomerCode ?? '', // Use the stored customer code
-      // 'soNoRecNo': _selectedCategory ?? '1',
-      // 'qNo': '',
-      // 'accountTypeCode': '',
-      // 'groupName': 'Project',
-      // 'itemCode': _selectedItemCode ?? '', // Use the stored item code
+      'customerCode': _selectedCustomerCode ?? '',
+      'soNoRecNo': _selectedCategory ?? '',
+      'saleOrderNo': _saleOrderNoController.text,
+      'accountTypeCode': '',
+      'groupName': 'Project',
+      'itemCode': _selectedItemCode ?? '',
     };
 
-    // Print the filter data to the console
     print('Filter Data:');
     filters.forEach((key, value) {
       print('$key: $value');
     });
 
-    // Navigate to SaleOrderPage with filters
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -474,5 +493,34 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         ),
       ),
     );
+  }
+
+  void _clearOtherFieldsExceptBranchAndDates() {
+    setState(() {
+      // Clear text fields
+      _customerNameController.clear();
+      _salesmanNameController.clear();
+      _itemNameController.clear();
+
+      // Clear selected values
+      _selectedCategory = null;
+      _selectedCustomerCode = null;
+      _selectedItemCode = null;
+
+      // Update keys to force Autocomplete widgets to rebuild
+      _customerAutocompleteKey = UniqueKey();
+      _salesmanAutocompleteKey = UniqueKey();
+      _itemAutocompleteKey = UniqueKey();
+
+      // Debug logs to verify keys are updated
+      log('Customer Autocomplete Key: $_customerAutocompleteKey');
+      log('Salesman Autocomplete Key: $_salesmanAutocompleteKey');
+      log('Item Autocomplete Key: $_itemAutocompleteKey');
+    });
+
+    // Debug logs for controllers
+    log('Customer Name Controller: ${_customerNameController.text}');
+    log('Salesman Name Controller: ${_salesmanNameController.text}');
+    log('Item Name Controller: ${_itemNameController.text}');
   }
 }

@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // For JSON parsing
 
+/// abhi static date jaa rhi hai
+
 // Events
 abstract class InvoiceEvent extends Equatable {
   const InvoiceEvent();
@@ -101,9 +103,8 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
         if (response.statusCode == 200) {
           // Parse the JSON response
           final List<dynamic> jsonList = json.decode(response.body);
-          final invoices = jsonList
-              .map((json) => Invoice.fromJson(json))
-              .toList();
+          final invoices =
+              jsonList.map((json) => Invoice.fromJson(json)).toList();
 
           emit(InvoiceLoaded(invoices: invoices));
         } else {

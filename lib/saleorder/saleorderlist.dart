@@ -60,6 +60,18 @@ class SaleOrderList extends StatelessWidget {
         title: 'Value',
         field: 'Value',
         type: PlutoColumnType.text(),
+        renderer: (rendererContext) {
+          final value = rendererContext.cell.value;
+          final formattValue = value != null
+              ? double.parse(value.toString()).toStringAsFixed(2)
+              : 'N/A';
+          final formattedValue =
+              value != null ? _formatNumber(formattValue.toString()) : 'N/A';
+          return Text(
+            formattedValue,
+            textAlign: TextAlign.right, // Ensure text is right-aligned
+          );
+        },
       ),
       PlutoColumn(
         title: 'Salesman',
@@ -118,5 +130,42 @@ class SaleOrderList extends StatelessWidget {
         },
       );
     }).toList();
+  }
+
+  String _formatNumber(String number) {
+    final parts = number.split('.');
+    final integerPart = parts[0];
+    final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+    // Check if the number is negative
+    final isNegative = integerPart.startsWith('-');
+    final digits = isNegative ? integerPart.substring(1) : integerPart;
+
+    // Add commas to the integer part
+    final buffer = StringBuffer();
+    int count = 0;
+
+    // Start from the end of the integer part
+    for (int i = digits.length - 1; i >= 0; i--) {
+      buffer.write(digits[i]);
+      count++;
+
+      // Add a comma after every three digits from the right
+      if (count == 3 && i != 0) {
+        buffer.write(',');
+        count = 0;
+      }
+      // After the first comma, add commas after every two digits
+      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+        buffer.write(',');
+        count = 0;
+      }
+    }
+
+    // Reverse the buffer to get the correct format
+    final reversed = buffer.toString().split('').reversed.join();
+
+    // Add the negative sign back if necessary
+    return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }
