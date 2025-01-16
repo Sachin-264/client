@@ -1,5 +1,7 @@
 import 'package:client/PPS%20report/ppsdraft.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/invoice/invoice_draft.dart';
+import 'package:client/invoice/invoice_draft_bloc.dart';
 import 'package:client/saleorder/sale_order_page_draft.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
@@ -101,8 +103,8 @@ class ComplaintPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider.value(
-                        value: BlocProvider.of<InvoiceBloc>(context),
-                        child: InvoicePage(),
+                        value: BlocProvider.of<InvoiceDraftPageBloc>(context),
+                        child: InvoiceDraft(),
                       ),
                     ),
                   );

@@ -13,7 +13,14 @@ abstract class InvoiceEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class FetchInvoiceEvent extends InvoiceEvent {}
+class FetchInvoiceEvent extends InvoiceEvent {
+  final Map<String, String> filters;
+
+  const FetchInvoiceEvent({required this.filters});
+
+  @override
+  List<Object> get props => [filters];
+}
 
 // States
 abstract class InvoiceState extends Equatable {
@@ -91,13 +98,36 @@ class Invoice {
 class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
   InvoiceBloc() : super(InvoiceInitial()) {
     on<FetchInvoiceEvent>((event, emit) async {
+      print('FetchPpsReport received with filters: ${event.filters}');
       emit(InvoiceLoading());
 
       try {
         // Replace with your API endpoint
         final url = Uri.parse(
-            'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=157.0&val2=E&val3=01-Jan-2025&val4=04-Jan-2025&val5=&val6=&val7=&type=sp_GetPerformaInvoiceDetails&str=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==');
+            'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?'
+            'val1=${event.filters['userId'] ?? ''}&'
+            'val2=${event.filters['branchCode'] ?? ''}&'
+            // 'val3=${event.filters['addUser'] ?? ''}&'
+            'val3=${event.filters['fromDate'] ?? ''}&'
+            'val4=${event.filters['toDate'] ?? ''}&'
+            // 'val5=${event.filters['addUser'] ?? ''}&'
+            // 'val6=${event.filters['customerCode'] ?? ''}&'
+            // 'val7=${event.filters['soNoRecNo'] ?? ''}&' // category code
+            // 'val8=${event.filters['saleOrderNo'] ?? ''}&' //sAale order no.
+            // 'val9=${event.filters['accountTypeCode'] ?? ''}&'
+            // 'val10=${event.filters['groupName'] ?? ''}&'
+            // 'val11=${event.filters['itemCode'] ?? ''}&'
+            'val5='
+            '&'
+            'val6='
+            '&'
+            'val7='
+            '&'
+            'type=sp_GetPerformaInvoiceDetails&'
+            'str=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==');
+        ;
 
+        print('API URL: $url');
         final response = await http.get(url);
 
         if (response.statusCode == 200) {

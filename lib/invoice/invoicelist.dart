@@ -22,7 +22,7 @@ class InvoiceList extends StatelessWidget {
               textAlign: PlutoColumnTextAlign.left, // Align text to the left
             ),
             PlutoColumn(
-              title: 'Invoice No',
+              title: 'P. Invoice No',
               field: 'InvoiceNo',
               type: PlutoColumnType.text(),
               textAlign: PlutoColumnTextAlign.left, // Align text to the left

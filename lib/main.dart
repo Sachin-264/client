@@ -1,5 +1,6 @@
 import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/invoice/invoice_draft_bloc.dart';
 import 'package:client/saleorder/saleorderbloc.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,8 @@ void main() {
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider<InvoiceDraftPageBloc>(
+            create: (context) => InvoiceDraftPageBloc()),
         BlocProvider<InvoiceBloc>(create: (context) => InvoiceBloc()),
         BlocProvider<SaleOrderDraftBloc>(
             create: (context) => SaleOrderDraftBloc()),

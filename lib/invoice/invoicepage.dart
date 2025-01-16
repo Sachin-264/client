@@ -5,7 +5,9 @@ import 'invoice bloc.dart';
 import 'invoicelist.dart';
 
 class InvoicePage extends StatefulWidget {
-  const InvoicePage({Key? key}) : super(key: key);
+  final Map<String, String> filters;
+
+  InvoicePage({Key? key, required this.filters}) : super(key: key);
 
   @override
   State<InvoicePage> createState() => _InvoicePageState();
@@ -15,14 +17,15 @@ class _InvoicePageState extends State<InvoicePage> {
   @override
   void initState() {
     super.initState();
-    context.read<InvoiceBloc>().add(FetchInvoiceEvent());
+    context.read<InvoiceBloc>().add(FetchInvoiceEvent(filters: widget.filters));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Perform Invoice List',
+        title: Text(
+          'Perform Invoice List',
           style: TextStyle(
             color: Colors.white, // White color for text
           ),
