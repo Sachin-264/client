@@ -1,9 +1,10 @@
 import 'dart:developer';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:client/PPS%20report/PPSreportpage.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PPSDraftPage extends StatefulWidget {
   @override
@@ -26,8 +27,8 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   String? _selectedBranch;
   String? _selectedCategory;
-  String? _selectedCustomerCode; // Store customer code
-  String? _selectedItemCode; // Store item code
+  String? _selectedCustomerCode;
+  String? _selectedItemCode;
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
     // Set default To Date to the current date
     _toDateController.text = _formatDate(now);
 
-    // Fetch data
+    // Fetch data only once when the widget is initialized
     context.read<PPSDraftPageBloc>().add(FetchData());
   }
 
@@ -65,6 +66,19 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
+          } else if (state is PPSDraftPageLoaded) {
+            // Set default branch and category when data is loaded
+            if (_selectedBranch == null && state.branches.isNotEmpty) {
+              _selectedBranch = state.branches.first['code'];
+              context.read<PPSDraftPageBloc>().add(
+                    FetchData(selectedBranch: _selectedBranch),
+                  );
+            }
+            if (_selectedCategory == null && state.categories.isNotEmpty) {
+              setState(() {
+                _selectedCategory = state.categories.first['code'];
+              });
+            }
           }
         },
         builder: (context, state) {
@@ -83,7 +97,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text('PDS Report', style: TextStyle(color: Colors.white)),
+      title: Text('PDS Report ', style: TextStyle(color: Colors.white)),
       backgroundColor: Colors.blue,
       iconTheme: IconThemeData(color: Colors.white),
       actions: [
@@ -130,9 +144,8 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
               _buildCustomerAutocomplete(state.customers),
               SizedBox(height: 20),
               // _buildSalesmanAutocomplete(state.salesmanNames),
-              SizedBox(height: 20),
+              // SizedBox(height: 20),
               // _buildItemAutocomplete(state.items),
-              SizedBox(height: 20),
               _buildDateRangeFields(),
               SizedBox(height: 30),
               Center(
@@ -159,7 +172,17 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         setState(() {
           _selectedBranch = code;
           _saleOrderNoController.clear();
+          // Reset other dropdowns when branch changes
+          _selectedCategory = null;
+          _selectedCustomerCode = null;
+          _selectedItemCode = null;
+          _customerNameController.clear();
+          _itemNameController.clear();
         });
+        // Fetch data with the selected branch
+        context.read<PPSDraftPageBloc>().add(
+              FetchData(selectedBranch: code),
+            );
       },
     );
   }
@@ -179,28 +202,12 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         if (_saleOrderNoController.text.isNotEmpty) {
           return null;
         }
-        return value == null ? 'Please select Select Category' : null;
+        return value == null ? 'Please select a category' : null;
       },
     );
   }
 
-  Widget _buildCustomerAutocomplete(List<Map<String, String>> customers) {
-    return _buildAutocompleteField(
-      key: _customerAutocompleteKey, // Pass the key
-      controller: _customerNameController,
-      label: 'Customer Name',
-      options: customers,
-      onSelected: (code) {
-        setState(() {
-          _selectedCustomerCode = code;
-          _customerNameController.text =
-              customers.firstWhere((item) => item['code'] == code)['name'] ??
-                  '';
-          _saleOrderNoController.clear();
-        });
-      },
-    );
-  }
+// For Future purpose If we have to use SalesmanAutocomplete and ItemAutocomplete
 
   // Widget _buildSalesmanAutocomplete(List<String> salesmanNames) {
   //   return _buildAutocompleteField(
@@ -235,16 +242,36 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
   //   );
   // }
 
+  Widget _buildCustomerAutocomplete(List<Map<String, String>> customers) {
+    return _buildAutocompleteField(
+      key: _customerAutocompleteKey,
+      controller: _customerNameController,
+      label: 'Customer Name',
+      options: customers,
+      onSelected: (code) {
+        setState(() {
+          _selectedCustomerCode = code;
+          _customerNameController.text =
+              customers.firstWhere((item) => item['code'] == code)['name'] ??
+                  '';
+          _saleOrderNoController.clear();
+        });
+      },
+    );
+  }
+
   Widget _buildDateRangeFields() {
     return Row(
       children: [
         Expanded(
-            child: _buildDateField(
-                controller: _fromDateController, label: 'From Date')),
+          child: _buildDateField(
+              controller: _fromDateController, label: 'From Date'),
+        ),
         SizedBox(width: 20),
         Expanded(
-            child: _buildDateField(
-                controller: _toDateController, label: 'To Date')),
+          child:
+              _buildDateField(controller: _toDateController, label: 'To Date'),
+        ),
       ],
     );
   }
@@ -254,14 +281,14 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
       controller: _saleOrderNoController,
       style: TextStyle(fontWeight: FontWeight.bold),
       decoration: InputDecoration(
-        labelText: 'Sale Order No (Last 4 digits)',
+        labelText: 'SALES ORDER NO (Last 4 digits)',
         labelStyle: TextStyle(color: Colors.grey),
         border: UnderlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
       onChanged: (value) {
         if (value.isNotEmpty) {
-          _clearOtherFieldsExceptBranchAndDates(); // Clear other fields and reset Autocomplete widgets
+          _clearOtherFieldsExceptBranchAndDates();
         }
       },
     );
@@ -274,16 +301,18 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _buildActionButton(
-              label: 'Reset',
-              color: Colors.red,
-              icon: Icons.close,
-              onPressed: _resetForm),
+            label: 'Reset',
+            color: Colors.red,
+            icon: Icons.close,
+            onPressed: _resetForm,
+          ),
           SizedBox(width: 10),
           _buildActionButton(
-              label: 'Show',
-              color: Colors.blue,
-              icon: Icons.arrow_forward,
-              onPressed: _navigateToSaleOrderPage),
+            label: 'Show',
+            color: Colors.blue,
+            icon: Icons.arrow_forward,
+            onPressed: _navigateToSaleOrderPage,
+          ),
         ],
       ),
     );
@@ -296,9 +325,12 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
     required ValueChanged<String?> onChanged,
     FormFieldValidator<String>? validator,
   }) {
+    // Ensure items are unique by value
+    final uniqueItems = items.toSet().toList();
+
     return DropdownButtonFormField<String>(
       value: value,
-      items: items.map((item) {
+      items: uniqueItems.map((item) {
         return DropdownMenuItem<String>(
           value: item['code'],
           child: Text(item['name']!,
@@ -313,6 +345,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
       validator: validator,
+      hint: uniqueItems.isEmpty ? Text('No data available') : null,
     );
   }
 
@@ -324,7 +357,7 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
     required Function(String?) onSelected,
   }) {
     return Autocomplete<String>(
-      key: key, // Use the provided key
+      key: key,
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text.isEmpty)
           return const Iterable<String>.empty();
@@ -458,40 +491,34 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
   }
 
   void _resetForm() {
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+
     setState(() {
-      // Clear all text fields
       _customerNameController.clear();
       _salesmanNameController.clear();
       _itemNameController.clear();
-      _fromDateController.clear();
-      _toDateController.clear();
+      _fromDateController.text = _formatDate(firstDayOfMonth);
+      _toDateController.text = _formatDate(now);
       _saleOrderNoController.clear();
-
-      // Clear all selected values
       _selectedBranch = null;
       _selectedCategory = null;
       _selectedCustomerCode = null;
       _selectedItemCode = null;
-
-      // Update keys to force Autocomplete widgets to rebuild
       _customerAutocompleteKey = UniqueKey();
       _salesmanAutocompleteKey = UniqueKey();
       _itemAutocompleteKey = UniqueKey();
 
-      // Debug logs to verify keys are updated
-      log('Customer Autocomplete Key: $_customerAutocompleteKey');
-      log('Salesman Autocomplete Key: $_salesmanAutocompleteKey');
-      log('Item Autocomplete Key: $_itemAutocompleteKey');
+      // Fetch data again to reset the branch and category dropdowns
+      context.read<PPSDraftPageBloc>().add(FetchData());
     });
-
-    // Debug logs for controllers
-    log('Customer Name Controller: ${_customerNameController.text}');
-    log('Salesman Name Controller: ${_salesmanNameController.text}');
-    log('Item Name Controller: ${_itemNameController.text}');
   }
 
   void _navigateToSaleOrderPage() {
     if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all required fields')),
+      );
       return;
     }
 
@@ -499,8 +526,8 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
       'userId': '157.0',
       'branchCode': _selectedBranch ?? '',
       'addUser': '',
-      'fromDate': _fromDateController.text, // Already in "01-Jan-2025" format
-      'toDate': _toDateController.text, // Already in "01-Jan-2025" format
+      'fromDate': _fromDateController.text,
+      'toDate': _toDateController.text,
       'customerCode': _selectedCustomerCode ?? '',
       'soNoRecNo': _selectedCategory ?? '',
       'saleOrderNo': _saleOrderNoController.text,
@@ -527,30 +554,15 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
 
   void _clearOtherFieldsExceptBranchAndDates() {
     setState(() {
-      // Clear text fields
       _customerNameController.clear();
       _salesmanNameController.clear();
       _itemNameController.clear();
-
-      // Clear selected values
       _selectedCategory = null;
       _selectedCustomerCode = null;
       _selectedItemCode = null;
-
-      // Update keys to force Autocomplete widgets to rebuild
       _customerAutocompleteKey = UniqueKey();
       _salesmanAutocompleteKey = UniqueKey();
       _itemAutocompleteKey = UniqueKey();
-
-      // Debug logs to verify keys are updated
-      log('Customer Autocomplete Key: $_customerAutocompleteKey');
-      log('Salesman Autocomplete Key: $_salesmanAutocompleteKey');
-      log('Item Autocomplete Key: $_itemAutocompleteKey');
     });
-
-    // Debug logs for controllers
-    log('Customer Name Controller: ${_customerNameController.text}');
-    log('Salesman Name Controller: ${_salesmanNameController.text}');
-    log('Item Name Controller: ${_itemNameController.text}');
   }
 }

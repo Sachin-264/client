@@ -1,7 +1,14 @@
+import 'dart:developer'; // For logging
 import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:excel/excel.dart'; // For Excel export
+import 'package:pdf/pdf.dart'; // For PDF export
+import 'package:pdf/widgets.dart' as pw; // For PDF export
+import 'package:path_provider/path_provider.dart'; // For file storage
+import 'dart:io'; // For file operations
+import 'dart:html' as html; // For HTML operations
 
 class PpsReportPage extends StatelessWidget {
   final Map<String, String> filters;
@@ -15,28 +22,28 @@ class PpsReportPage extends StatelessWidget {
           PpsReportBloc()..add(FetchPpsReport(filters: filters)),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             'PDS Report Filter',
             style: TextStyle(
-              color: Colors.white, // White color for text
+              color: Colors.white,
             ),
           ),
           backgroundColor: Colors.blue,
-          automaticallyImplyLeading: false, // Remove default back button
+          automaticallyImplyLeading: false,
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Navigate back
+                Navigator.pop(context);
               },
-              child: Row(
+              child: const Row(
                 children: [
-                  Icon(Icons.arrow_back_ios, color: Colors.white), // Back icon
-                  SizedBox(width: 4), // Add spacing between icon and text
+                  Icon(Icons.arrow_back_ios, color: Colors.white),
+                  SizedBox(width: 4),
                   Text(
                     'Back',
                     style: TextStyle(
-                      color: Colors.white, // White color for text
-                      fontSize: 16, // Adjust font size
+                      color: Colors.white,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -44,9 +51,259 @@ class PpsReportPage extends StatelessWidget {
             ),
           ],
         ),
-        body: PpsReportGrid(),
+        body: Column(
+          children: [
+            // Export buttons
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  BlocBuilder<PpsReportBloc, PpsReportState>(
+                    builder: (context, state) {
+                      if (state is PpsReportLoaded) {
+                        return ElevatedButton(
+                          onPressed: () =>
+                              _exportToExcel(context, state.reports),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green, // Green background
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to Excel',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      } else {
+                        return ElevatedButton(
+                          onPressed:
+                              null, // Disable the button if data is not loaded
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey, // Grey background
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to Excel',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 20),
+                  BlocBuilder<PpsReportBloc, PpsReportState>(
+                    builder: (context, state) {
+                      if (state is PpsReportLoaded) {
+                        return ElevatedButton(
+                          onPressed: () => _exportToPDF(context, state.reports),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red, // Red background
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to PDF',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      } else {
+                        return ElevatedButton(
+                          onPressed:
+                              null, // Disable the button if data is not loaded
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey, // Grey background
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to PDF',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: PpsReportGrid(),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  // Export to Excel logic
+  Future<void> _exportToExcel(
+      BuildContext context, List<Map<String, dynamic>> reports) async {
+    try {
+      // Create an Excel file
+      var excel = Excel.createExcel();
+      excel.delete('flutter'); // Remove the default "flutter" sheet
+      var sheet = excel['Sheet1'];
+
+      // Add headers
+      sheet.appendRow([
+        'S.No.',
+        'Sale Order No',
+        'Sale Order Date',
+        'Customer Name',
+        'Value',
+        'Delivery Date',
+        'Desired Date',
+        'PDS1 Date',
+        'Employee Name 1',
+        'PDS1 Remarks',
+        'PDS2 Date',
+        'Employee Name 2',
+        'PDS2 Remarks',
+        'PDS3 Date',
+        'Employee Name 3',
+        'PDS3 Remarks',
+        'Salesman Name',
+        'Status',
+      ].map((header) => TextCellValue(header)).toList());
+
+      // Add data rows
+      for (var report in reports) {
+        sheet.appendRow([
+          report['sno']?.toString() ?? 'N/A',
+          report['saleOrderNo']?.toString() ?? 'N/A',
+          report['saleOrderDate']?.toString() ?? 'N/A',
+          report['customerName']?.toString() ?? 'N/A',
+          report['grandTotal']?.toString() ?? 'N/A',
+          report['deliveryDate']?.toString() ?? 'N/A',
+          report['desiredDate']?.toString() ?? 'N/A',
+          report['pds1Date']?.toString() ?? 'N/A',
+          report['employeeName1']?.toString() ?? 'N/A',
+          report['pds1Remarks']?.toString() ?? 'N/A',
+          report['pds2Date']?.toString() ?? 'N/A',
+          report['employeeName2']?.toString() ?? 'N/A',
+          report['pds2Remarks']?.toString() ?? 'N/A',
+          report['pds3Date']?.toString() ?? 'N/A',
+          report['employeeName3']?.toString() ?? 'N/A',
+          report['pds3Remarks']?.toString() ?? 'N/A',
+          report['salesmanName']?.toString() ?? 'N/A',
+          report['status']?.toString() ?? 'N/A',
+        ].map((value) => TextCellValue(value)).toList());
+      }
+
+      // Save the file
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/pps_report.xlsx');
+        await file.writeAsBytes(fileBytes);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exported to Excel successfully!')),
+        );
+      }
+    } catch (e) {
+      // Handle any errors that occur during the export process
+    }
+  }
+
+  // Export to PDF logic
+  Future<void> _exportToPDF(
+      BuildContext context, List<Map<String, dynamic>> reports) async {
+    try {
+      // Create a PDF document
+      final pdf = pw.Document();
+
+      // Add a page with a table to the PDF
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Column(
+              children: [
+                pw.Text(
+                  'PPS Report',
+                  style: pw.TextStyle(
+                      fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 16),
+                pw.Table.fromTextArray(
+                  headers: [
+                    'S.No.',
+                    'Sale Order No',
+                    'Sale Order Date',
+                    'Customer Name',
+                    'Value',
+                    'Delivery Date',
+                    'Desired Date',
+                    'PDS1 Date',
+                    'Employee Name 1',
+                    'PDS1 Remarks',
+                    'PDS2 Date',
+                    'Employee Name 2',
+                    'PDS2 Remarks',
+                    'PDS3 Date',
+                    'Employee Name 3',
+                    'PDS3 Remarks',
+                    'Salesman Name',
+                    'Status',
+                  ],
+                  data: reports.map((report) {
+                    return [
+                      report['sno']?.toString() ?? 'N/A',
+                      report['saleOrderNo']?.toString() ?? 'N/A',
+                      report['saleOrderDate']?.toString() ?? 'N/A',
+                      report['customerName']?.toString() ?? 'N/A',
+                      report['grandTotal']?.toString() ?? 'N/A',
+                      report['deliveryDate']?.toString() ?? 'N/A',
+                      report['desiredDate']?.toString() ?? 'N/A',
+                      report['pds1Date']?.toString() ?? 'N/A',
+                      report['employeeName1']?.toString() ?? 'N/A',
+                      report['pds1Remarks']?.toString() ?? 'N/A',
+                      report['pds2Date']?.toString() ?? 'N/A',
+                      report['employeeName2']?.toString() ?? 'N/A',
+                      report['pds2Remarks']?.toString() ?? 'N/A',
+                      report['pds3Date']?.toString() ?? 'N/A',
+                      report['employeeName3']?.toString() ?? 'N/A',
+                      report['pds3Remarks']?.toString() ?? 'N/A',
+                      report['salesmanName']?.toString() ?? 'N/A',
+                      report['status']?.toString() ?? 'N/A',
+                    ];
+                  }).toList(),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Save the PDF to bytes
+      final pdfBytes = await pdf.save();
+
+      // Create a Blob from the PDF bytes
+      final blob = html.Blob([pdfBytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+
+      // Create an anchor element to trigger the download
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'sale_orders.pdf')
+        ..click();
+
+      // Revoke the object URL to free up memory
+      html.Url.revokeObjectUrl(url);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exported to PDF successfully!')),
+      );
+    } catch (e) {
+      // Handle any errors that occur during the export process
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export to PDF: $e')),
+      );
+    }
   }
 }
 
@@ -55,29 +312,30 @@ class PpsReportGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PpsReportBloc, PpsReportState>(
       builder: (context, state) {
+        log('Current state in PpsReportGrid: $state');
         if (state is PpsReportLoading) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (state is PpsReportError) {
           return Center(child: Text(state.message));
         } else if (state is PpsReportLoaded) {
+          log('Reports data in PpsReportGrid: ${state.reports}');
+
           return PlutoGrid(
             columns: _buildColumns(),
             rows: _buildRows(state.reports),
             configuration: PlutoGridConfiguration(
               columnFilter: PlutoGridColumnFilterConfig(
                 filters: const [
-                  ...FilterHelper
-                      .defaultFilters, // Default filters (text, number, etc.)
+                  ...FilterHelper.defaultFilters,
                 ],
               ),
             ),
             onLoaded: (PlutoGridOnLoadedEvent event) {
-              // Enable column filtering
               event.stateManager.setShowColumnFilter(true);
             },
           );
         }
-        return Center(child: Text('No data available'));
+        return const Center(child: Text('No data available'));
       },
     );
   }
@@ -106,20 +364,18 @@ class PpsReportGrid extends StatelessWidget {
         type: PlutoColumnType.text(),
       ),
       PlutoColumn(
-        title: 'Grand Total',
+        title: 'Value',
         field: 'grandTotal',
-        type: PlutoColumnType.number(), // Use number type for alignment
-        textAlign: PlutoColumnTextAlign.right, // Right-align the text
+        type: PlutoColumnType.number(),
+        textAlign: PlutoColumnTextAlign.right,
         renderer: (rendererContext) {
           final value = rendererContext.row.cells['grandTotal']?.value;
-          // Format the value to show up to 2 decimal points
-          final cleanedValue = value != null
-              ? value.toString().replaceAll(',', '')
-              : '0'; // Default to '0' if null
+          final cleanedValue =
+              value != null ? value.toString().replaceAll(',', '') : '0';
           final formattedValue = _formatNumber(cleanedValue);
           return Text(
             formattedValue,
-            textAlign: TextAlign.right, // Ensure text is right-aligned
+            textAlign: TextAlign.right,
           );
         },
       ),
@@ -190,14 +446,13 @@ class PpsReportGrid extends StatelessWidget {
         renderer: (rendererContext) {
           return InkWell(
             onTap: () {
-              // Handle button click
               final row = rendererContext.row;
-              print('Selected Sale Order: ${row.cells['saleOrderNo']?.value}');
+              log('Selected Sale Order: ${row.cells['saleOrderNo']?.value}');
             },
             child: Container(
               alignment: Alignment.center,
-              child: Text(
-                'Select',
+              child: const Text(
+                ' Select',
                 style: TextStyle(
                   color: Colors.blue,
                 ),
@@ -211,28 +466,17 @@ class PpsReportGrid extends StatelessWidget {
 
   // Convert API data to PlutoRow format
   List<PlutoRow> _buildRows(List<Map<String, dynamic>> reports) {
-    // Calculate the total value of GrandTotal
     double totalValue = 0;
     for (var report in reports) {
       final value = report['GrandTotal'] ?? '0';
-      // Remove commas from the value before parsing
       final cleanedValue = value.toString().replaceAll(',', '');
-
-      // Debugging: Print the cleaned value being parsed
-      print('Cleaned GrandTotal Value: $cleanedValue');
-
       try {
         totalValue += double.parse(cleanedValue);
       } catch (e) {
-        // Debugging: Print an error if parsing fails
-        print('Error parsing GrandTotal: $cleanedValue');
+        log('Error parsing GrandTotal: $cleanedValue');
       }
     }
 
-    // Debugging: Print the total value
-    print('Total GrandTotal: $totalValue');
-
-    // Build rows for reports
     final rows = reports.asMap().entries.map((entry) {
       final index = entry.key;
       final report = entry.value;
@@ -260,7 +504,6 @@ class PpsReportGrid extends StatelessWidget {
       );
     }).toList();
 
-    // Add a footer row for the total value
     rows.add(
       PlutoRow(
         cells: {
@@ -269,7 +512,6 @@ class PpsReportGrid extends StatelessWidget {
           'saleOrderDate': PlutoCell(value: ''),
           'customerName': PlutoCell(value: ''),
           'grandTotal': PlutoCell(value: totalValue),
-          // PlutoCell(value: _formatNumber(totalValue.toStringAsFixed(2))),
           'deliveryDate': PlutoCell(value: ''),
           'desiredDate': PlutoCell(value: ''),
           'pds1Date': PlutoCell(value: ''),
@@ -296,35 +538,26 @@ class PpsReportGrid extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
-    // Check if the number is negative
     final isNegative = integerPart.startsWith('-');
     final digits = isNegative ? integerPart.substring(1) : integerPart;
 
-    // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
-    // Start from the end of the integer part
     for (int i = digits.length - 1; i >= 0; i--) {
       buffer.write(digits[i]);
       count++;
 
-      // Add a comma after every three digits from the right
       if (count == 3 && i != 0) {
         buffer.write(',');
         count = 0;
-      }
-      // After the first comma, add commas after every two digits
-      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+      } else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
         buffer.write(',');
         count = 0;
       }
     }
 
-    // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-
-    // Add the negative sign back if necessary
     return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 }

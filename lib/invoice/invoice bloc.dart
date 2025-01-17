@@ -78,6 +78,21 @@ class Invoice {
     required this.addDate,
   });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'recNo': recNo,
+      'branchCode': branchCode,
+      'invoiceNo': invoiceNo,
+      'invoiceDate': invoiceDate,
+      'accountName': accountName,
+      'grandTotal': grandTotal,
+      'lc': lc,
+      'salesManName': salesManName,
+      'addUserName': addUserName,
+      'addDate': addDate,
+    };
+  }
+
   factory Invoice.fromJson(Map<String, dynamic> json) {
     return Invoice(
       recNo: json['RecNo'],
@@ -117,9 +132,9 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
             // 'val9=${event.filters['accountTypeCode'] ?? ''}&'
             // 'val10=${event.filters['groupName'] ?? ''}&'
             // 'val11=${event.filters['itemCode'] ?? ''}&'
-            'val5='
+            'val5= ${event.filters['saleOrderNo'] ?? ''}' // sale order no
             '&'
-            'val6='
+            'val6=  ${event.filters['accountTypeCode'] ?? ''}' // account type code issue on the customer name
             '&'
             'val7='
             '&'

@@ -65,18 +65,17 @@ class PpsReportBloc extends Bloc<PpsReportEvent, PpsReportState> {
             'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?'
             'val1=${event.filters['userId'] ?? ''}&'
             'val2=${event.filters['branchCode'] ?? ''}&'
-            'val3=${event.filters['addUser'] ?? ''}&'
+            'val3=${event.filters['addUser '] ?? ''}&'
             'val4=${event.filters['fromDate'] ?? ''}&'
             'val5=${event.filters['toDate'] ?? ''}&'
             'val6=${event.filters['customerCode'] ?? ''}&'
             'val7=${event.filters['soNoRecNo'] ?? ''}&'
-            'val8=${event.filters['saleOrderNo'] ?? ''}&' //sAale order no.
+            'val8=${event.filters['saleOrderNo'] ?? ''}&'
             'val9=${event.filters['accountTypeCode'] ?? ''}&'
             'val10=${event.filters['groupName'] ?? ''}&'
             'val11=${event.filters['itemCode'] ?? ''}&'
             'type=sp_GetSaleOrderDetails&'
             'str=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==');
-        ;
 
         print('API URL: $url');
 
