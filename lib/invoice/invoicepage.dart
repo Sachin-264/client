@@ -14,7 +14,7 @@ import 'invoicelist.dart';
 class InvoicePage extends StatefulWidget {
   final Map<String, String> filters;
 
-  InvoicePage({Key? key, required this.filters}) : super(key: key);
+  const InvoicePage({super.key, required this.filters});
 
   @override
   State<InvoicePage> createState() => _InvoicePageState();

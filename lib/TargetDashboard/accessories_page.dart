@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
-
+import 'package:excel/excel.dart'; // For Excel export
+import 'package:pdf/pdf.dart'; // For PDF export
+import 'package:pdf/widgets.dart' as pw; // For PDF export
+import 'package:path_provider/path_provider.dart'; // For file storage
+import 'dart:io'; // For file operations
+import 'dart:html' as html; // For HTML operations
 import 'accessories_bloc.dart'; // Import the ItemBloc
 
 class ItemPage extends StatelessWidget {
@@ -11,6 +16,7 @@ class ItemPage extends StatelessWidget {
   final String salesmanRecNo;
 
   const ItemPage({
+    super.key,
     required this.fromDate,
     required this.toDate,
     required this.salesmanId,
@@ -62,24 +68,14 @@ class ItemPage extends StatelessWidget {
             } else if (state is ItemLoaded) {
               final data = state.data;
 
-              // Print raw data for debugging
-              print('Raw Data:');
-              data.forEach((item) {
-                print(item);
-              });
-
               // Filter out rows where both TargetValue and SaleValue are zero
               final filteredData = data.where((item) {
-                final targetValue = double.tryParse(item['TargeValue'] ?? '0') ?? 0;
-                final saleValue = double.tryParse(item['SaleValue'] ?? '0') ?? 0;
-                return targetValue != 0 || saleValue != 0; // Keep rows where either is not zero
+                final targetValue =
+                    double.tryParse(item['TargeValue'] ?? '0') ?? 0;
+                final saleValue =
+                    double.tryParse(item['SaleValue'] ?? '0') ?? 0;
+                return targetValue != 0 || saleValue != 0;
               }).toList();
-
-              // Print filtered data for debugging
-              print('Filtered Data:');
-              filteredData.forEach((item) {
-                print(item);
-              });
 
               // Define PlutoGrid columns
               final columns = [
@@ -106,115 +102,115 @@ class ItemPage extends StatelessWidget {
                   type: PlutoColumnType.text(),
                   textAlign: PlutoColumnTextAlign.right,
                   renderer: (rendererContext) {
-                    // Get the value from the cell
                     final value = rendererContext.cell.value.toString();
-
-                    // Append '%' to the value
                     return Text(
-                      '$value%', // Add % sign here
-                      textAlign: TextAlign.right, // Align text to the right
+                      '$value%',
+                      textAlign: TextAlign.right,
                     );
                   },
                 ),
               ];
 
-              // Calculate totals
-              double totalTargetValue = 0;
-              double totalSaleValue = 0;
-              double totalValuePer = 0;
-
-              // Print initial totals for debugging
-              print('Initial Totals:');
-              print('Total Target Value: $totalTargetValue');
-              print('Total Sale Value: $totalSaleValue');
-              print('Total ValuePer: $totalValuePer');
-
               // Prepare PlutoGrid rows
               final rows = filteredData.map((item) {
-                final targetValue = double.tryParse(item['TargeValue'] ?? '0') ?? 0;
-                final saleValue = double.tryParse(item['SaleValue'] ?? '0') ?? 0;
+                final targetValue =
+                    double.tryParse(item['TargeValue'] ?? '0') ?? 0;
+                final saleValue =
+                    double.tryParse(item['SaleValue'] ?? '0') ?? 0;
                 final valuePer = double.tryParse(item['ValuePer'] ?? '0') ?? 0;
-
-                // Print values for each row for debugging
-                print('Processing Row:');
-                print('ItemGroupName: ${item['ItemGroupName']}');
-                print('TargetValue: $targetValue');
-                print('SaleValue: $saleValue');
-                print('ValuePer: $valuePer');
-
-                // Add to totals (negative values will be subtracted automatically)
-                totalTargetValue += targetValue;
-                totalSaleValue += saleValue;
-                totalValuePer += valuePer;
-
-                // Print updated totals after each row for debugging
-                print('Updated Totals:');
-                print('Total Target Value: $totalTargetValue');
-                print('Total Sale Value: $totalSaleValue');
-                print('Total ValuePer: $totalValuePer');
-
-                // Step 1: Apply _formatValuePer to handle leading zeros
-                final formattedTargetValue = _formatValuePer(targetValue.toString());
-                final formattedSaleValue = _formatValuePer(saleValue.toString());
-                final formattedValuePer = _formatValuePer(valuePer.toString());
-
-                // Step 2: Apply _formatNumber to format with commas
-                final formattedTargetValueWithCommas = _formatNumber(formattedTargetValue);
-                final formattedSaleValueWithCommas = _formatNumber(formattedSaleValue);
-                final formattedValuePerWithCommas = _formatNumber(formattedValuePer);
 
                 return PlutoRow(
                   cells: {
-                    'ItemGroupName': PlutoCell(value: item['ItemGroupName'] ?? 'N/A'),
-                    'TargeValue': PlutoCell(value: formattedTargetValueWithCommas), // Format TargetValue
-                    'SaleValue': PlutoCell(value: formattedSaleValueWithCommas), // Format SaleValue
-                    'ValuePer': PlutoCell(value: formattedValuePerWithCommas), // Format ValuePer
+                    'ItemGroupName':
+                        PlutoCell(value: item['ItemGroupName'] ?? 'N/A'),
+                    'TargeValue':
+                        PlutoCell(value: _formatNumber(targetValue.toString())),
+                    'SaleValue':
+                        PlutoCell(value: _formatNumber(saleValue.toString())),
+                    'ValuePer':
+                        PlutoCell(value: _formatNumber(valuePer.toString())),
                   },
                 );
               }).toList();
 
-              // Print final totals for debugging
-              print('Final Totals:');
-              print('Total Target Value: $totalTargetValue');
-              print('Total Sale Value: $totalSaleValue');
-              print('Total ValuePer: $totalValuePer');
-
-              // Step 1: Apply _formatValuePer to handle leading zeros for totals
-              final formattedTotalTargetValue = _formatValuePer(totalTargetValue.toString());
-              final formattedTotalSaleValue = _formatValuePer(totalSaleValue.toString());
-              final formattedTotalValuePer = _formatValuePer(totalValuePer.toString());
-
-              // Step 2: Apply _formatNumber to format totals with commas
-              final formattedTotalTargetValueWithCommas = _formatNumber(formattedTotalTargetValue);
-              final formattedTotalSaleValueWithCommas = _formatNumber(formattedTotalSaleValue);
-              final formattedTotalValuePerWithCommas = _formatNumber(formattedTotalValuePer);
-
               // Add a last row for totals
+              double totalTargetValue = filteredData.fold(0, (sum, item) {
+                return sum + (double.tryParse(item['TargeValue'] ?? '0') ?? 0);
+              });
+              double totalSaleValue = filteredData.fold(0, (sum, item) {
+                return sum + (double.tryParse(item['SaleValue'] ?? '0') ?? 0);
+              });
+              double totalValuePer = filteredData.fold(0, (sum, item) {
+                return sum + (double.tryParse(item['ValuePer'] ?? '0') ?? 0);
+              });
+
               rows.add(
                 PlutoRow(
                   cells: {
                     'ItemGroupName': PlutoCell(value: 'Total'),
-                    'TargeValue': PlutoCell(value: formattedTotalTargetValueWithCommas),
-                    'SaleValue': PlutoCell(value: formattedTotalSaleValueWithCommas),
-                    'ValuePer': PlutoCell(value: formattedTotalValuePerWithCommas),
+                    'TargeValue': PlutoCell(
+                        value: _formatNumber(totalTargetValue.toString())),
+                    'SaleValue': PlutoCell(
+                        value: _formatNumber(totalSaleValue.toString())),
+                    'ValuePer': PlutoCell(
+                        value: _formatNumber(totalValuePer.toString())),
                   },
                 ),
               );
 
-              return PlutoGrid(
-                columns: columns,
-                rows: rows,
-                onLoaded: (PlutoGridOnLoadedEvent event) {
-                  event.stateManager.setShowColumnFilter(true); // Enable filtering
-                },
-                onChanged: (PlutoGridOnChangedEvent event) {
-                  print(event);
-                },
-                configuration: PlutoGridConfiguration(
-                  columnSize: PlutoGridColumnSizeConfig(
-                    autoSizeMode: PlutoAutoSizeMode.scale,
+              return Column(
+                children: [
+                  // Export buttons
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () =>
+                              _exportToExcel(context, filteredData),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to Excel',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          onPressed: () => _exportToPDF(context, filteredData),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: const Text(
+                            'Export to PDF',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  // PlutoGrid
+                  Expanded(
+                    child: PlutoGrid(
+                      columns: columns,
+                      rows: rows,
+                      onLoaded: (PlutoGridOnLoadedEvent event) {
+                        event.stateManager.setShowColumnFilter(true);
+                      },
+                      configuration: PlutoGridConfiguration(
+                        columnSize: PlutoGridColumnSizeConfig(
+                          autoSizeMode: PlutoAutoSizeMode.scale,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             }
             return Container(); // Initial state
@@ -230,45 +226,125 @@ class ItemPage extends StatelessWidget {
     final integerPart = parts[0];
     final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
-    // Check if the number is negative
     final isNegative = integerPart.startsWith('-');
     final digits = isNegative ? integerPart.substring(1) : integerPart;
 
-    // Add commas to the integer part
     final buffer = StringBuffer();
     int count = 0;
 
-    // Start from the end of the integer part
     for (int i = digits.length - 1; i >= 0; i--) {
       buffer.write(digits[i]);
       count++;
 
-      // Add a comma after every three digits from the right
       if (count == 3 && i != 0) {
         buffer.write(',');
         count = 0;
-      }
-      // After the first comma, add commas after every two digits
-      else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
+      } else if (count == 2 && i != 0 && buffer.toString().contains(',')) {
         buffer.write(',');
         count = 0;
       }
     }
 
-    // Reverse the buffer to get the correct format
     final reversed = buffer.toString().split('').reversed.join();
-
-    // Add the negative sign back if necessary
     return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
 
-// Helper function to add leading zero to values like ".67" or "-.88"
-  String _formatValuePer(String value) {
-    if (value.startsWith('-.')) {
-      return '-0${value.substring(1)}'; // Add leading zero after the negative sign
-    } else if (value.startsWith('.')) {
-      return '0$value'; // Add leading zero if the value starts with a dot
+  // Export to Excel logic
+  Future<void> _exportToExcel(
+      BuildContext context, List<Map<String, dynamic>> data) async {
+    try {
+      var excel = Excel.createExcel();
+      excel.delete('flutter'); // Remove the default "flutter" sheet
+      var sheet = excel['Sheet1'];
+
+      // Add headers
+      sheet.appendRow([
+        'Item Group Name',
+        'Target Value',
+        'Sale Value',
+        '%Achieved',
+      ].map((header) => TextCellValue(header)).toList());
+
+      // Add data rows
+      for (var item in data) {
+        sheet.appendRow([
+          item['ItemGroupName'] ?? 'N/A',
+          item['TargeValue'] ?? 'N/A',
+          item['SaleValue'] ?? 'N/A',
+          item['ValuePer'] ?? 'N/A',
+        ].map((value) => TextCellValue(value)).toList());
+      }
+
+      // Save the file
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/item_report.xlsx');
+        await file.writeAsBytes(fileBytes);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exported to Excel successfully!')),
+        );
+      }
+    } catch (e) {}
+  }
+
+  // Export to PDF logic
+  Future<void> _exportToPDF(
+      BuildContext context, List<Map<String, dynamic>> data) async {
+    try {
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Column(
+              children: [
+                pw.Text(
+                  'ItemWise Report',
+                  style: pw.TextStyle(
+                      fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 16),
+                pw.Table.fromTextArray(
+                  headers: [
+                    'Item Group Name',
+                    'Target Value',
+                    'Sale Value',
+                    '%Achieved',
+                  ],
+                  data: data.map((item) {
+                    return [
+                      item['ItemGroupName'] ?? 'N/A',
+                      item['TargeValue'] ?? 'N/A',
+                      item['SaleValue'] ?? 'N/A',
+                      item['ValuePer'] ?? 'N/A',
+                    ];
+                  }).toList(),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      final pdfBytes = await pdf.save();
+      final blob = html.Blob([pdfBytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'item_report.pdf')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exported to PDF successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export to PDF: $e')),
+      );
     }
-    return value; // Return the original value if it's already formatted
   }
 }

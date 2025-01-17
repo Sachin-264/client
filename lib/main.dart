@@ -1,5 +1,6 @@
 import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/TargetDashboard/selectpage_bloc.dart';
 import 'package:client/invoice/invoice_draft_bloc.dart';
 import 'package:client/saleorder/saleorderbloc.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
@@ -28,6 +29,7 @@ void main() {
                 ItemManagementBloc()), // ItemBloc is provided here
         BlocProvider<PPSDraftPageBloc>(create: (context) => PPSDraftPageBloc()),
         BlocProvider<PpsReportBloc>(create: (context) => PpsReportBloc()),
+        BlocProvider<SelectPageBloc>(create: (context) => SelectPageBloc()),
       ],
       child: MyApp(),
     ),
@@ -35,6 +37,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

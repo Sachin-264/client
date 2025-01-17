@@ -14,7 +14,7 @@ import 'package:client/TargetDashboard/targetsale&viewallbloc.dart';
 class ViewAllPage extends StatelessWidget {
   final String salesmanRecNo;
 
-  const ViewAllPage({required this.salesmanRecNo});
+  const ViewAllPage({super.key, required this.salesmanRecNo});
 
   @override
   Widget build(BuildContext context) {

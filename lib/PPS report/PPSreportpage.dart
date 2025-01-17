@@ -13,7 +13,7 @@ import 'dart:html' as html; // For HTML operations
 class PpsReportPage extends StatelessWidget {
   final Map<String, String> filters;
 
-  PpsReportPage({Key? key, required this.filters}) : super(key: key);
+  const PpsReportPage({super.key, required this.filters});
 
   @override
   Widget build(BuildContext context) {
@@ -308,6 +308,8 @@ class PpsReportPage extends StatelessWidget {
 }
 
 class PpsReportGrid extends StatelessWidget {
+  const PpsReportGrid({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PpsReportBloc, PpsReportState>(

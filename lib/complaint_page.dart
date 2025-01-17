@@ -28,6 +28,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:universal_html/html.dart' as html;
 
 class ComplaintPage extends StatelessWidget {
+  const ComplaintPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

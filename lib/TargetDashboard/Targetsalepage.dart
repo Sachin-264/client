@@ -6,10 +6,12 @@ import 'package:client/TargetDashboard/targetsale&viewallbloc.dart';
 // Import the SelectPage
 
 class TargetSalePage extends StatelessWidget {
-
   final String salesmanRecNo;
 
-  const TargetSalePage({ required this.salesmanRecNo,});
+  const TargetSalePage({
+    super.key,
+    required this.salesmanRecNo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +51,11 @@ class TargetSalePage extends StatelessWidget {
               return Center(child: Text(state.message));
             } else if (state is TargetSaleLoaded) {
               // Get present month, last month, and second last month data
-              final presentMonthData = _getMonthData(state.data, 0); // Present month
+              final presentMonthData =
+                  _getMonthData(state.data, 0); // Present month
               final lastMonthData = _getMonthData(state.data, -1); // Last month
-              final secondLastMonthData = _getMonthData(state.data, -2); // Second last month
+              final secondLastMonthData =
+                  _getMonthData(state.data, -2); // Second last month
 
               return SingleChildScrollView(
                 child: Padding(
@@ -65,19 +69,25 @@ class TargetSalePage extends StatelessWidget {
                           // Calculate the number of boxes per row based on screen width
                           final boxWidth = 300.0; // Fixed width
                           final availableWidth = constraints.maxWidth;
-                          final boxesPerRow = (availableWidth / boxWidth).floor();
-                          final crossAxisCount = boxesPerRow.clamp(1, 3); // Ensure at least 1 and at most 3 boxes per row
+                          final boxesPerRow =
+                              (availableWidth / boxWidth).floor();
+                          final crossAxisCount = boxesPerRow.clamp(1,
+                              3); // Ensure at least 1 and at most 3 boxes per row
 
                           return GridView.count(
                             shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(), // Disable scrolling
+                            physics:
+                                NeverScrollableScrollPhysics(), // Disable scrolling
                             crossAxisCount: crossAxisCount,
                             mainAxisSpacing: 16,
                             crossAxisSpacing: 16,
                             children: [
-                              _buildDateBox(context, presentMonthData, Colors.blue), // Pass context here
-                              _buildDateBox(context, lastMonthData, Colors.green), // Pass context here
-                              _buildDateBox(context, secondLastMonthData, Colors.orange), // Pass context here
+                              _buildDateBox(context, presentMonthData,
+                                  Colors.blue), // Pass context here
+                              _buildDateBox(context, lastMonthData,
+                                  Colors.green), // Pass context here
+                              _buildDateBox(context, secondLastMonthData,
+                                  Colors.orange), // Pass context here
                             ],
                           );
                         },
@@ -90,15 +100,15 @@ class TargetSalePage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ViewAllPage(
-                                    salesmanRecNo:salesmanRecNo
-                                ),
+                                builder: (context) =>
+                                    ViewAllPage(salesmanRecNo: salesmanRecNo),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
-                            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 12),
                           ),
                           child: Text(
                             'View All',
@@ -119,13 +129,14 @@ class TargetSalePage extends StatelessWidget {
   }
 
   // Helper method to get data for a specific month offset
-  Map<String, dynamic> _getMonthData(List<Map<String, dynamic>> data, int monthOffset) {
+  Map<String, dynamic> _getMonthData(
+      List<Map<String, dynamic>> data, int monthOffset) {
     final now = DateTime.now();
     final targetMonth = DateTime(now.year, now.month + monthOffset);
     final targetMonthKey = _getMonthKey(targetMonth);
 
     return data.firstWhere(
-          (item) => _getMonthKeyFromDate(item['FromDate']) == targetMonthKey,
+      (item) => _getMonthKeyFromDate(item['FromDate']) == targetMonthKey,
       orElse: () => {},
     );
   }
@@ -133,8 +144,18 @@ class TargetSalePage extends StatelessWidget {
   // Helper method to get month key (e.g., "Apr-2024")
   String _getMonthKey(DateTime date) {
     final monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final month = monthNames[date.month - 1];
     return '$month-${date.year}';
@@ -150,10 +171,13 @@ class TargetSalePage extends StatelessWidget {
   }
 
   // Widget to build a date box
-  Widget _buildDateBox(BuildContext context, Map<String, dynamic> data, Color color) {
+  Widget _buildDateBox(
+      BuildContext context, Map<String, dynamic> data, Color color) {
     final month = _getMonthKeyFromDate(data['FromDate'] ?? 'N/A');
-    final targetValue = _formatNumber(data['TargeValue'] ?? '0'); // Format target value
-    final percentageAchieved = data['ValuePer'] ?? '0.00'; // Use ValuePer directly from API
+    final targetValue =
+        _formatNumber(data['TargeValue'] ?? '0'); // Format target value
+    final percentageAchieved =
+        data['ValuePer'] ?? '0.00'; // Use ValuePer directly from API
     final fromDate = data['FromDate'] ?? 'N/A'; // Extract FromDate
     final toDate = data['ToDate'] ?? 'N/A'; // Extract ToDate
     print(fromDate);
@@ -165,7 +189,10 @@ class TargetSalePage extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SelectPage(fromDate: fromDate, toDate: toDate,),
+            builder: (context) => SelectPage(
+              fromDate: fromDate,
+              toDate: toDate,
+            ),
           ),
         );
       },
@@ -254,5 +281,4 @@ class TargetSalePage extends StatelessWidget {
     // Add the negative sign back if necessary
     return '${isNegative ? '-' : ''}$reversed$decimalPart';
   }
-
 }

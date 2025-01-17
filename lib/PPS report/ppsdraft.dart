@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PPSDraftPage extends StatefulWidget {
+  const PPSDraftPage({super.key});
+
   @override
   _PPSDraftPageState createState() => _PPSDraftPageState();
 }
@@ -359,8 +361,9 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
     return Autocomplete<String>(
       key: key,
       optionsBuilder: (TextEditingValue textEditingValue) {
-        if (textEditingValue.text.isEmpty)
+        if (textEditingValue.text.isEmpty) {
           return const Iterable<String>.empty();
+        }
         return options
             .where((option) =>
                 option['name']
@@ -475,17 +478,17 @@ class _PPSDraftPageState extends State<PPSDraftPage> {
   }) {
     return ElevatedButton(
       onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
       child: Row(
         children: [
           Icon(icon, color: Colors.white),
           SizedBox(width: 5),
           Text(label, style: TextStyle(color: Colors.white)),
         ],
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

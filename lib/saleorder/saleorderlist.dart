@@ -4,6 +4,8 @@ import 'package:pluto_grid/pluto_grid.dart'; // Import PlutoGrid
 import 'saleorderbloc.dart';
 
 class SaleOrderList extends StatelessWidget {
+  const SaleOrderList({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SaleOrderBloc, SaleOrderState>(

@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 
 class InvoiceList extends StatelessWidget {
-  const InvoiceList({Key? key}) : super(key: key);
+  const InvoiceList({super.key});
 
   // Helper function to format numbers with commas and two decimal places
   String _formatNumber(String number) {

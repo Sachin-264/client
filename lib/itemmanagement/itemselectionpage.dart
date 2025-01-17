@@ -4,6 +4,8 @@ import 'itembloc.dart'; // Import the BLoC
 import 'reportpage.dart'; // Import the ReportPage
 
 class ItemSelectionPage extends StatefulWidget {
+  const ItemSelectionPage({super.key});
+
   @override
   _ItemSelectionPageState createState() => _ItemSelectionPageState();
 }
@@ -11,8 +13,10 @@ class ItemSelectionPage extends StatefulWidget {
 class _ItemSelectionPageState extends State<ItemSelectionPage> {
   String? selectedItemCode; // Store the selected item's code
   String quantity = '1'; // Initialize quantity with '1'
-  final TextEditingController _itemController = TextEditingController(); // Controller for the item field
-  final TextEditingController _quantityController = TextEditingController(); // Controller for the quantity field
+  final TextEditingController _itemController =
+      TextEditingController(); // Controller for the item field
+  final TextEditingController _quantityController =
+      TextEditingController(); // Controller for the quantity field
 
   @override
   void initState() {
@@ -53,7 +57,9 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<ItemManagementBloc>().add(FetchItemNames()); // Retry fetching items
+                        context
+                            .read<ItemManagementBloc>()
+                            .add(FetchItemNames()); // Retry fetching items
                       },
                       child: Text('Retry'),
                     ),
@@ -72,7 +78,8 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                     options: state.items,
                     onSelected: (code) {
                       setState(() {
-                        selectedItemCode = code; // Store the selected item's code
+                        selectedItemCode =
+                            code; // Store the selected item's code
                       });
                       print('Selected Item Code: $code');
                     },
@@ -80,9 +87,12 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                   SizedBox(height: 20),
                   // Quantity TextField with Padding
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0), // Add horizontal padding to match the Item Name field
+                    padding: EdgeInsets.symmetric(
+                        horizontal:
+                            16.0), // Add horizontal padding to match the Item Name field
                     child: TextField(
-                      controller: _quantityController, // Use the controller for the quantity field
+                      controller:
+                          _quantityController, // Use the controller for the quantity field
                       decoration: InputDecoration(
                         labelText: 'Quantity',
                         labelStyle: TextStyle(color: Colors.black),
@@ -107,11 +117,13 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                             selectedItemCode = null;
                             quantity = '1'; // Reset quantity to '1'
                             _itemController.clear(); // Clear the item field
-                            _quantityController.text = quantity; // Reset the quantity field to '1'
+                            _quantityController.text =
+                                quantity; // Reset the quantity field to '1'
                           });
                         },
                         icon: Icon(Icons.close, color: Colors.white),
-                        label: Text('Reset', style: TextStyle(color: Colors.white)),
+                        label: Text('Reset',
+                            style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                         ),
@@ -125,21 +137,25 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ReportPage(
-                                  itemCode: selectedItemCode!, // Pass the item code
+                                  itemCode:
+                                      selectedItemCode!, // Pass the item code
                                   quantity: quantity, // Pass the quantity
                                 ),
                               ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Please select an item and enter quantity')),
+                              SnackBar(
+                                  content: Text(
+                                      'Please select an item and enter quantity')),
                             );
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                         ),
-                        child: Text('< Show', style: TextStyle(color: Colors.white)),
+                        child: Text('< Show',
+                            style: TextStyle(color: Colors.white)),
                       ),
                     ],
                   ),
@@ -171,17 +187,25 @@ class _ItemSelectionPageState extends State<ItemSelectionPage> {
           return const Iterable<String>.empty();
         }
         return options.where((Map<String, String> option) {
-          return option['name']?.toLowerCase().contains(textEditingValue.text.toLowerCase()) ?? false;
+          return option['name']
+                  ?.toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase()) ??
+              false;
         }).map((option) => option['name'] ?? '');
       },
       onSelected: (String? selection) {
-        final selectedItem = options.firstWhere((item) => item['name'] == selection, orElse: () => {'name': '', 'code': ''});
+        final selectedItem = options.firstWhere(
+            (item) => item['name'] == selection,
+            orElse: () => {'name': '', 'code': ''});
         onSelected(selectedItem['code']); // Pass the code to the callback
         setState(() {
           controller.text = selection ?? ''; // Set the displayed name
         });
       },
-      fieldViewBuilder: (BuildContext context, TextEditingController textController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+      fieldViewBuilder: (BuildContext context,
+          TextEditingController textController,
+          FocusNode focusNode,
+          VoidCallback onFieldSubmitted) {
         return TextField(
           controller: textController,
           focusNode: focusNode,

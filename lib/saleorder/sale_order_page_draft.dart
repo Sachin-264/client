@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SaleOrderDraftPage extends StatefulWidget {
+  const SaleOrderDraftPage({super.key});
+
   @override
   _SaleOrderDraftPageState createState() => _SaleOrderDraftPageState();
 }
@@ -361,8 +363,9 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     return Autocomplete<String>(
       key: key,
       optionsBuilder: (TextEditingValue textEditingValue) {
-        if (textEditingValue.text.isEmpty)
+        if (textEditingValue.text.isEmpty) {
           return const Iterable<String>.empty();
+        }
         return options
             .where((option) =>
                 option['name']
@@ -477,17 +480,17 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   }) {
     return ElevatedButton(
       onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
       child: Row(
         children: [
           Icon(icon, color: Colors.white),
           SizedBox(width: 5),
           Text(label, style: TextStyle(color: Colors.white)),
         ],
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

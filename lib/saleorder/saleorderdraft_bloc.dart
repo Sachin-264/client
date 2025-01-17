@@ -75,12 +75,9 @@ class SaleOrderDraftBloc
         // _fetchItemNames(selectedBranch),
       ]);
 
-      final List<Map<String, String>> branches =
-          results[0] as List<Map<String, String>>;
-      final List<Map<String, String>> categories =
-          results[1] as List<Map<String, String>>;
-      final List<Map<String, String>> customers =
-          results[2] as List<Map<String, String>>;
+      final List<Map<String, String>> branches = results[0];
+      final List<Map<String, String>> categories = results[1];
+      final List<Map<String, String>> customers = results[2];
       // final List<Map<String, String>> salesmanNames =
       //     results[3] as List<Map<String, String>>; // Correct type
       // final List<Map<String, String>> items =

@@ -12,6 +12,8 @@ import 'package:client/TargetDashboard/targetDashboardBloc.dart';
 import 'Targetsalepage.dart'; // Import the TargetSalePage
 
 class TargetDashboardPage extends StatelessWidget {
+  const TargetDashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -262,7 +264,7 @@ class TargetDashboardPage extends StatelessWidget {
           TextCellValue(item['SalesManName'] ?? 'N/A'),
           TextCellValue(item['SalesManDesignation'] ?? 'N/A'),
           TextCellValue(
-              _formatValuePer(item['ValuePer']?.toString() ?? '0.00') + '%'),
+              '${_formatValuePer(item['ValuePer']?.toString() ?? '0.00')}%'),
         ]);
       }
 
@@ -317,9 +319,7 @@ class TargetDashboardPage extends StatelessWidget {
                   .map((item) => [
                         item['SalesManName'] ?? 'N/A',
                         item['SalesManDesignation'] ?? 'N/A',
-                        _formatValuePer(
-                                item['ValuePer']?.toString() ?? '0.00') +
-                            '%',
+                        '${_formatValuePer(item['ValuePer']?.toString() ?? '0.00')}%',
                       ])
                   .toList(),
             );

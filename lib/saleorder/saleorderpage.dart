@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 
 class SaleOrderPage extends StatefulWidget {
   final Map<String, String> filters;
-  const SaleOrderPage({Key? key, required this.filters}) : super(key: key);
+  const SaleOrderPage({super.key, required this.filters});
 
   @override
   State<SaleOrderPage> createState() => _SaleOrderPageState();

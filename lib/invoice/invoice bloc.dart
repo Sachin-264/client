@@ -140,7 +140,6 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
             '&'
             'type=sp_GetPerformaInvoiceDetails&'
             'str=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==');
-        ;
 
         print('API URL: $url');
         final response = await http.get(url);

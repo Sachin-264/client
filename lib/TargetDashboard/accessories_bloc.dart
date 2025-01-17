@@ -11,20 +11,18 @@ abstract class ItemEvent extends Equatable {
   List<Object> get props => [];
 }
 
+// Model
 class FetchItemData extends ItemEvent {
   final String fromDate;
   final String toDate;
   final String salesmanId;
   final String salesmanRecNo;
 
-
-
-  const FetchItemData({
-    required this.fromDate,
-    required this.toDate,
-    required this.salesmanId,
-    required this.salesmanRecNo
-  });
+  const FetchItemData(
+      {required this.fromDate,
+      required this.toDate,
+      required this.salesmanId,
+      required this.salesmanRecNo});
 
   @override
   List<Object> get props => [fromDate, toDate, salesmanId];
@@ -67,24 +65,22 @@ class ItemBloc extends Bloc<ItemEvent, ItemState> {
   }
 
   Future<void> _onFetchItemData(
-      FetchItemData event,
-      Emitter<ItemState> emit,
-      ) async {
+    FetchItemData event,
+    Emitter<ItemState> emit,
+  ) async {
     emit(ItemLoading());
     try {
       final response = await http.get(Uri.parse(
         'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?val1=${event.salesmanId}&val2=${event.salesmanRecNo}&val3=${event.fromDate}&val4=${event.toDate}&val5=&val6=&val7=&val8=&val9=&val10=&val11=&val12=&type=sp_GetSaleVsTargetItemWiseReport&val13=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==',
       ));
 
-
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
 
         // Check if the response is a list
         if (jsonData is List) {
-          final List<Map<String, dynamic>> data = jsonData
-              .map((item) => item as Map<String, dynamic>)
-              .toList();
+          final List<Map<String, dynamic>> data =
+              jsonData.map((item) => item as Map<String, dynamic>).toList();
           emit(ItemLoaded(data));
         } else {
           emit(ItemError('Invalid API response format'));

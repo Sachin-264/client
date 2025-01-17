@@ -14,7 +14,7 @@ class ReportPage extends StatelessWidget {
   final String itemCode;
   final String quantity;
 
-  const ReportPage({required this.itemCode, required this.quantity});
+  const ReportPage({super.key, required this.itemCode, required this.quantity});
 
   @override
   Widget build(BuildContext context) {
