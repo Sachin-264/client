@@ -1,14 +1,19 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart'; // Ensure this import is correct
-import 'package:excel/excel.dart'; // For Excel export
+import 'package:syncfusion_flutter_xlsio/xlsio.dart'
+    as xlsio; // For Excel export
 import 'package:pdf/pdf.dart'; // For PDF export
 import 'package:pdf/widgets.dart' as pw; // For PDF export
 import 'package:universal_html/html.dart'
     as html; // For file downloads in the browser
 import 'dart:io'; // For file operations
 import 'package:path_provider/path_provider.dart'; // For file storage
-import 'report_bloc.dart';
+import 'package:http/http.dart' as http; // For HTTP requests
+import 'package:open_file/open_file.dart'; // For opening files
+import 'report_bloc.dart'; // Your custom Bloc
 
 class ReportPage extends StatelessWidget {
   final String itemCode;
@@ -42,8 +47,17 @@ class ReportPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: () {
-                            _exportToExcel(context); // Export to Excel
+                          onPressed: () async {
+                            // Show "Please Wait" message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Please wait, exporting to Excel...'),
+                                duration: Duration(
+                                    seconds: 2), // Adjust duration as needed
+                              ),
+                            );
+                            await _exportToExcel(context); // Export to Excel
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green, // Green background
@@ -58,8 +72,17 @@ class ReportPage extends StatelessWidget {
                         const SizedBox(
                             width: 20), // Add spacing between buttons
                         ElevatedButton(
-                          onPressed: () {
-                            _exportToPDF(context); // Export to PDF
+                          onPressed: () async {
+                            // Show "Please Wait" message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Please wait, exporting to PDF...'),
+                                duration: Duration(
+                                    seconds: 2), // Adjust duration as needed
+                              ),
+                            );
+                            await _exportToPDF(context); // Export to PDF
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red, // Red background
@@ -112,14 +135,12 @@ class ReportPage extends StatelessWidget {
         title: 'Item Name',
         field: 'ItemName',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final cell = rendererContext.cell;
           final row = rendererContext.row;
           final viewLevel =
               row.cells['ViewLevel']?.value ?? "0"; // Default to "0" if null
-
-          // Print ViewLevel for debugging
-          print('ViewLevel: $viewLevel');
 
           // Convert ViewLevel to a double for padding calculation
           final viewLevelValue = double.tryParse(viewLevel.toString()) ?? 0.0;
@@ -145,32 +166,34 @@ class ReportPage extends StatelessWidget {
         title: 'Our Item No',
         field: 'OurItemNo',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
       ),
       PlutoColumn(
         title: 'Qty',
         field: 'Qty',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
       ),
       PlutoColumn(
         title: 'Unit Name',
         field: 'UnitName',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
       ),
       PlutoColumn(
         title: 'Item Remarks',
         field: 'ItemRemarks',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
       ),
       PlutoColumn(
         title: 'Item File Name',
         field: 'ItemFileName',
         type: PlutoColumnType.text(),
+        enableEditingMode: false,
         renderer: (rendererContext) {
           final cell = rendererContext.cell;
           final imageUrl = cell.value.toString();
-
-          // Print the image URL for debugging
-          print('Image URL: $imageUrl');
 
           // Display the image if the URL is valid
           if (imageUrl.isNotEmpty &&
@@ -199,8 +222,7 @@ class ReportPage extends StatelessWidget {
     return reportData.map((data) {
       return PlutoRow(
         cells: {
-          'ViewLevel': PlutoCell(
-              value: data['ViewLevel']), // Use ViewLevel instead of ValuePer
+          'ViewLevel': PlutoCell(value: data['ViewLevel']),
           'ItemName': PlutoCell(value: data['ItemName']),
           'OurItemNo': PlutoCell(value: data['OurItemNo']),
           'Qty': PlutoCell(value: data['Qty']),
@@ -212,72 +234,96 @@ class ReportPage extends StatelessWidget {
     }).toList();
   }
 
-  // Export to Excel (without Blob)
   Future<void> _exportToExcel(BuildContext context) async {
     try {
+      print('Exporting to Excel...'); // Debug print
+
       // Fetch data from the Bloc
       final state = context.read<ReportBloc>().state;
       if (state is ReportLoaded) {
         final reportData = state.reportData;
+        print('Report Data: $reportData'); // Debug print
 
-        // Create an Excel file
-        var excel = Excel.createExcel();
+        // Create a new Excel workbook
+        final xlsio.Workbook workbook = xlsio.Workbook();
+        final xlsio.Worksheet sheet = workbook.worksheets[0];
 
-        // Remove the default "flutter" sheet
-        excel.delete('flutter');
+        // Add headers
+        sheet.getRangeByName('A1').setText('Item Name');
+        sheet.getRangeByName('B1').setText('Our Item No');
+        sheet.getRangeByName('C1').setText('Qty');
+        sheet.getRangeByName('D1').setText('Unit Name');
+        sheet.getRangeByName('E1').setText('Item File Name');
 
-        // Create a new sheet
-        var sheet = excel['Sheet1'];
+        // Add data rows
+        for (var i = 0; i < reportData.length; i++) {
+          final data = reportData[i];
+          sheet.getRangeByName('A${i + 2}').setText(data['ItemName'] ?? 'N/A');
+          sheet.getRangeByName('B${i + 2}').setText(data['OurItemNo'] ?? 'N/A');
+          sheet.getRangeByName('C${i + 2}').setText(data['Qty'] ?? 'N/A');
+          sheet.getRangeByName('D${i + 2}').setText(data['UnitName'] ?? 'N/A');
 
-        // Add headers (wrap strings in TextCellValue)
-        sheet.appendRow([
-          TextCellValue('Item Name'),
-          TextCellValue('Our Item No'),
-          TextCellValue('Qty'),
-          TextCellValue('Unit Name'),
-          TextCellValue('Item Remarks'),
-          TextCellValue('Item File Name'),
-        ]);
+          // Download and embed the image if the URL is valid
+          final imageUrl = data['ItemFileName']?.toString() ?? '';
+          print('Image URL: $imageUrl'); // Debug print
+          if (imageUrl.isNotEmpty &&
+              Uri.tryParse(imageUrl)?.hasAbsolutePath == true) {
+            final imageBytes = await _downloadImage(imageUrl);
+            if (imageBytes != null) {
+              // Add the image to the Excel sheet in the "Item File Name" column (column index 5)
+              final xlsio.Picture picture =
+                  sheet.pictures.addStream(i + 2, 5, imageBytes);
+              picture.height = 50; // Set image height
+              picture.width = 50; // Set image width
 
-        // Add data rows (wrap strings in TextCellValue)
-        for (var data in reportData) {
-          sheet.appendRow([
-            TextCellValue(data['ItemName'] ?? 'N/A'),
-            TextCellValue(data['OurItemNo'] ?? 'N/A'),
-            TextCellValue(data['Qty'] ?? 'N/A'),
-            TextCellValue(data['UnitName'] ?? 'N/A'),
-            TextCellValue(data['ItemRemarks'] ?? 'N/A'),
-            TextCellValue(data['ItemFileName'] ?? 'N/A'),
-          ]);
+              // Adjust row height to fit the image
+              sheet.getRangeByName('A${i + 2}:E${i + 2}').rowHeight = 50;
+            } else {
+              sheet.getRangeByName('E${i + 2}').setText('Image not available');
+            }
+          } else {
+            sheet.getRangeByName('E${i + 2}').setText('No image');
+          }
         }
+
+        // Auto-fit columns for better readability
+        sheet.getRangeByName('A1:E${reportData.length + 1}').autoFitColumns();
 
         // Save the Excel file to bytes
-        var fileBytes = excel.save();
-        if (fileBytes != null) {
-          // Get the application documents directory
-          final directory = await getApplicationDocumentsDirectory();
-          final file = File('${directory.path}/ReportPage.xlsx');
+        final List<int> fileBytes = workbook.saveAsStream();
+        workbook.dispose();
 
-          // Write the Excel file to the device's storage
-          await file.writeAsBytes(fileBytes);
+        // Create a Blob from the Excel bytes
+        final blob = html.Blob([
+          fileBytes
+        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        final url = html.Url.createObjectUrlFromBlob(blob);
 
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Exported to Excel successfully!')),
-          );
+        // Create an anchor element to trigger the download
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', 'ReportPage.xlsx')
+          ..click();
 
-          // Print the file path for debugging
-          print('Excel file saved at: ${file.path}');
-        }
+        // Revoke the object URL to free up memory
+        html.Url.revokeObjectUrl(url);
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Exported to Excel successfully!')),
+        );
       }
     } catch (e, stackTrace) {
       // Log the error and stack trace
       print('Error occurred during Excel export: $e');
       print('Stack trace: $stackTrace');
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export to Excel: $e')),
+      );
     }
   }
 
-  // Export to PDF (with Blob)
   Future<void> _exportToPDF(BuildContext context) async {
     try {
       // Fetch data from the Bloc
@@ -292,25 +338,31 @@ class ReportPage extends StatelessWidget {
         pdf.addPage(
           pw.Page(
             build: (pw.Context context) {
-              return pw.Table.fromTextArray(
-                headers: [
-                  'Item Name',
-                  'Our Item No',
-                  'Qty',
-                  'Unit Name',
-                  'Item Remarks',
-                  'Item File Name',
+              return pw.Table(
+                border: pw.TableBorder.all(),
+                children: [
+                  // Table headers
+                  pw.TableRow(
+                    children: [
+                      pw.Text('Item Name'),
+                      pw.Text('Our Item No'),
+                      pw.Text('Qty'),
+                      pw.Text('Unit Name'),
+                      pw.Text('Item File Name'),
+                    ],
+                  ),
+                  // Table rows
+                  for (var data in reportData)
+                    pw.TableRow(
+                      children: [
+                        pw.Text(data['ItemName'] ?? 'N/A'),
+                        pw.Text(data['OurItemNo'] ?? 'N/A'),
+                        pw.Text(data['Qty'] ?? 'N/A'),
+                        pw.Text(data['UnitName'] ?? 'N/A'),
+                        pw.Text(data['ItemFileName'] ?? 'No image'),
+                      ],
+                    ),
                 ],
-                data: reportData
-                    .map((data) => [
-                          data['ItemName'] ?? 'N/A',
-                          data['OurItemNo'] ?? 'N/A',
-                          data['Qty'] ?? 'N/A',
-                          data['UnitName'] ?? 'N/A',
-                          data['ItemRemarks'] ?? 'N/A',
-                          data['ItemFileName'] ?? 'N/A',
-                        ])
-                    .toList(),
               );
             },
           ),
@@ -346,5 +398,18 @@ class ReportPage extends StatelessWidget {
         SnackBar(content: Text('Failed to export to PDF: $e')),
       );
     }
+  }
+
+  // Helper function to download an image from a URL
+  Future<Uint8List?> _downloadImage(String imageUrl) async {
+    try {
+      final response = await http.get(Uri.parse(imageUrl));
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      }
+    } catch (e) {
+      print('Error downloading image: $e');
+    }
+    return null;
   }
 }

@@ -2,6 +2,7 @@ import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
 import 'package:client/TargetDashboard/selectpage_bloc.dart';
 import 'package:client/invoice/invoice_draft_bloc.dart';
+import 'package:client/itemmanagement/itemrealbloc.dart';
 import 'package:client/saleorder/saleorderbloc.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,9 @@ void main() {
         BlocProvider<TargetDashboardBloc>(
             create: (context) => TargetDashboardBloc()),
         BlocProvider<SaleOrderBloc>(create: (context) => SaleOrderBloc()),
-        BlocProvider<ItemManagementBloc>(
+        BlocProvider<ItemDraftPageBloc>(
             create: (context) =>
-                ItemManagementBloc()), // ItemBloc is provided here
+                ItemDraftPageBloc()), // ItemBloc is provided here
         BlocProvider<PPSDraftPageBloc>(create: (context) => PPSDraftPageBloc()),
         BlocProvider<PpsReportBloc>(create: (context) => PpsReportBloc()),
         BlocProvider<SelectPageBloc>(create: (context) => SelectPageBloc()),

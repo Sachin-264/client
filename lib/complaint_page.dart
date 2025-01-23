@@ -9,6 +9,8 @@ import 'package:client/complaint/complaint_state.dart';
 import 'package:client/invoice/invoice_draft.dart';
 import 'package:client/invoice/invoice_draft_bloc.dart';
 import 'package:client/itemmanagement/itembloc.dart';
+import 'package:client/itemmanagement/itemrealbloc.dart';
+import 'package:client/itemmanagement/itemrealdraft.dart';
 import 'package:client/itemmanagement/itemselectionpage.dart';
 import 'package:client/saleorder/sale_order_page_draft.dart';
 import 'package:client/saleorder/saleorderdraft_bloc.dart';
@@ -144,8 +146,8 @@ class ComplaintPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => BlocProvider.value(
-                        value: context.read<ItemManagementBloc>(),
-                        child: ItemSelectionPage(),
+                        value: context.read<ItemDraftPageBloc>(),
+                        child: ItemDraftPage(),
                       ),
                     ),
                   );
