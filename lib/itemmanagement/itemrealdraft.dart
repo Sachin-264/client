@@ -19,21 +19,11 @@ class _ItemDraftPageState extends State<ItemDraftPage> {
   String? _selectedBranch;
   String? _selectedItemCode;
   String? _quantity = '1';
-  dynamic userID;
-  String? branch;
-  String? str;
 
   @override
   void initState() {
     super.initState();
-    userID = Provider.of<Auth>(context, listen: false).userId;
-    str = Provider.of<Auth>(context, listen: false).str;
-    branch = Provider.of<Auth>(context, listen: false).userBranch;
-    context.read<ItemDraftPageBloc>().add(FetchData(
-          userID: userID,
-          str: str,
-          selectedBranch: branch,
-        ));
+    context.read<ItemDraftPageBloc>().add(FetchData());
   }
 
   @override
@@ -55,14 +45,11 @@ class _ItemDraftPageState extends State<ItemDraftPage> {
           } else if (state is ItemDraftPageLoaded) {
             if (_selectedBranch == null && state.branches.isNotEmpty) {
               setState(() {
-                _selectedBranch = branch;
+                _selectedBranch = state.branches.first['code'];
               });
               // Fetch data only if the branch has changed
               context.read<ItemDraftPageBloc>().add(
-                    FetchData(
-                        userID: userID,
-                        str: str,
-                        selectedBranch: _selectedBranch),
+                    FetchData(selectedBranch: _selectedBranch),
                   );
             }
           }
@@ -341,8 +328,6 @@ class _ItemDraftPageState extends State<ItemDraftPage> {
         builder: (context) => ReportPage(
           itemCode: _selectedItemCode!,
           quantity: _quantity!,
-          str: str,
-          userID: userID,
         ),
       ),
     );

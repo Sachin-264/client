@@ -53,8 +53,7 @@ class ReportPage extends StatelessWidget {
                               const SnackBar(
                                 content:
                                     Text('Please wait, exporting to Excel...'),
-                                duration: Duration(
-                                    seconds: 2), // Adjust duration as needed
+                                duration: Duration(seconds: 2),
                               ),
                             );
                             await _exportToExcel(context); // Export to Excel
@@ -78,8 +77,7 @@ class ReportPage extends StatelessWidget {
                               const SnackBar(
                                 content:
                                     Text('Please wait, exporting to PDF...'),
-                                duration: Duration(
-                                    seconds: 2), // Adjust duration as needed
+                                duration: Duration(seconds: 2),
                               ),
                             );
                             await _exportToPDF(context); // Export to PDF
@@ -331,6 +329,19 @@ class ReportPage extends StatelessWidget {
       if (state is ReportLoaded) {
         final reportData = state.reportData;
 
+        // Download all images asynchronously before building the PDF
+        final List<Uint8List?> imageBytesList = [];
+        for (var data in reportData) {
+          final imageUrl = data['ItemFileName']?.toString() ?? '';
+          if (imageUrl.isNotEmpty &&
+              Uri.tryParse(imageUrl)?.hasAbsolutePath == true) {
+            final imageBytes = await _downloadImage(imageUrl);
+            imageBytesList.add(imageBytes);
+          } else {
+            imageBytesList.add(null);
+          }
+        }
+
         // Create a PDF document
         final pdf = pw.Document();
 
@@ -352,14 +363,22 @@ class ReportPage extends StatelessWidget {
                     ],
                   ),
                   // Table rows
-                  for (var data in reportData)
+                  for (var i = 0; i < reportData.length; i++)
                     pw.TableRow(
                       children: [
-                        pw.Text(data['ItemName'] ?? 'N/A'),
-                        pw.Text(data['OurItemNo'] ?? 'N/A'),
-                        pw.Text(data['Qty'] ?? 'N/A'),
-                        pw.Text(data['UnitName'] ?? 'N/A'),
-                        pw.Text(data['ItemFileName'] ?? 'No image'),
+                        pw.Text(reportData[i]['ItemName'] ?? 'N/A'),
+                        pw.Text(reportData[i]['OurItemNo'] ?? 'N/A'),
+                        pw.Text(reportData[i]['Qty'] ?? 'N/A'),
+                        pw.Text(reportData[i]['UnitName'] ?? 'N/A'),
+                        // Check if the image URL is valid
+                        if (imageBytesList[i] != null)
+                          pw.Image(
+                            pw.MemoryImage(imageBytesList[i]!),
+                            width: 50,
+                            height: 50,
+                          )
+                        else
+                          pw.Text('No image'),
                       ],
                     ),
                 ],
