@@ -1,5 +1,6 @@
 import 'package:client/PPS%20report/PPSreportbloc.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/Search_box/filter_bloc.dart';
 import 'package:client/TargetDashboard/selectpage_bloc.dart';
 import 'package:client/invoice/invoice_draft_bloc.dart';
 import 'package:client/itemmanagement/itemrealbloc.dart';
@@ -12,6 +13,8 @@ import 'TargetDashboard/targetDashboardBloc.dart';
 import 'complaint_page.dart';
 import 'invoice/invoice bloc.dart';
 import 'itemmanagement/itembloc.dart';
+
+String companyCode = '101';
 
 void main() {
   runApp(
@@ -31,6 +34,8 @@ void main() {
         BlocProvider<PPSDraftPageBloc>(create: (context) => PPSDraftPageBloc()),
         BlocProvider<PpsReportBloc>(create: (context) => PpsReportBloc()),
         BlocProvider<SelectPageBloc>(create: (context) => SelectPageBloc()),
+        BlocProvider<UserGroupBloc>(
+            create: (context) => UserGroupBloc(companyCode)),
       ],
       child: MyApp(),
     ),

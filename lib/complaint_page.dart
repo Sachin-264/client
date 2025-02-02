@@ -1,5 +1,7 @@
 import 'package:client/PPS%20report/ppsdraft.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/Search_box/filter_bloc.dart';
+import 'package:client/Search_box/filter_page.dart';
 import 'package:client/TargetDashboard/TargetDashboardPage.dart';
 import 'package:client/TargetDashboard/targetDashboardBloc.dart';
 import 'package:client/complaint/complaint.dart';
@@ -163,6 +165,21 @@ class ComplaintPage extends StatelessWidget {
                       builder: (context) => BlocProvider.value(
                         value: BlocProvider.of<PPSDraftPageBloc>(context),
                         child: PPSDraftPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              _createDrawerItem(
+                icon: Icons.search,
+                text: 'USer Group',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: context.read<UserGroupBloc>(),
+                        child: FilterPage(),
                       ),
                     ),
                   );
