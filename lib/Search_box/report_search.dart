@@ -1,3 +1,4 @@
+import 'package:client/Search_box/filter_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'report_search_bloc.dart'; // Import your BLoC file
@@ -6,7 +7,7 @@ class SearchPage extends StatefulWidget {
   final String companyCode;
   final String userCode;
   final String str;
-  final String fieldId; // Add FieldId
+  final String fieldId;
 
   const SearchPage({
     Key? key,
@@ -23,8 +24,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> _localData = [];
   List<Map<String, dynamic>> _originalData = [];
-  List<Map<String, bool>> _checkboxVisibility = [];
-  Map<String, List<int>> _parentChildMap = {}; // Parent-Child Relationship Map
+  Map<String, List<int>> _parentChildMap = {};
 
   @override
   Widget build(BuildContext context) {
@@ -52,18 +52,7 @@ class _SearchPageState extends State<SearchPage> {
                 if (_localData.isEmpty) {
                   _localData = List.from(state.data);
                   _originalData = List.from(state.data);
-                  _buildParentChildMap(); // Build Parent-Child Relationship Map
-
-                  _checkboxVisibility = _localData.map((item) {
-                    return {
-                      'ShowMenu': item['ShowMenu'] == 'Y',
-                      'CanAdd': item['CanAdd'] == 'Y',
-                      'CanEdit': item['CanEdit'] == 'Y',
-                      'CanDelete': item['CanDelete'] == 'Y',
-                      'CanPrint': item['CanPrint'] == 'Y',
-                      'CanExport': item['CanExport'] == 'Y',
-                    };
-                  }).toList();
+                  _buildParentChildMap();
                 }
 
                 return Column(
@@ -72,8 +61,7 @@ class _SearchPageState extends State<SearchPage> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.vertical,
                         child: SingleChildScrollView(
-                          scrollDirection:
-                              Axis.horizontal, // Allows horizontal scrolling
+                          scrollDirection: Axis.horizontal,
                           child: Container(
                             width: MediaQuery.of(context).size.width,
                             child: DataTable(
@@ -86,129 +74,71 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                               columns: const [
                                 DataColumn(
-                                  label: Text(
-                                    'Menu Name',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Menu Name',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Menu Options',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Menu Options',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Show Menu',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Show Menu',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Add',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Add',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Edit',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Edit',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Delete',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Delete',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Print',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Print',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                                 DataColumn(
-                                  label: Text(
-                                    'Export',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
+                                    label: Text('Export',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))),
                               ],
                               rows: _localData.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final item = entry.value;
                                 final viewLevel = int.parse(item['ViewLevel']);
-
-                                final showShowMenu =
-                                    _checkboxVisibility[index]['ShowMenu']!;
-                                final showCanAdd =
-                                    _checkboxVisibility[index]['CanAdd']!;
-                                final showCanEdit =
-                                    _checkboxVisibility[index]['CanEdit']!;
-                                final showCanDelete =
-                                    _checkboxVisibility[index]['CanDelete']!;
-                                final showCanPrint =
-                                    _checkboxVisibility[index]['CanPrint']!;
-                                final showCanExport =
-                                    _checkboxVisibility[index]['CanExport']!;
+                                final menuOptions = item['MenuOptions'];
 
                                 return DataRow(
                                   cells: [
-                                    DataCell(
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                            left: viewLevel * 16.0),
-                                        child: Text(
-                                          item['MenuName'],
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        item[
-                                            'MenuOptions'], // Display MenuOptions directly
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      showShowMenu
-                                          ? Checkbox(
-                                              value: item['ShowMenu'] == 'Y',
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _updateCheckboxState(
-                                                      index, value!);
-                                                });
-                                              },
-                                            )
-                                          : Container(),
-                                    ),
-                                    DataCell(showCanAdd
+                                    DataCell(Padding(
+                                      padding: EdgeInsets.only(
+                                          left: viewLevel * 16.0),
+                                      child: Text(item['MenuName'],
+                                          style: const TextStyle(fontSize: 14)),
+                                    )),
+                                    DataCell(Text(menuOptions,
+                                        style: const TextStyle(fontSize: 14))),
+                                    DataCell(Checkbox(
+                                      value: item['ShowMenu'] == 'Y',
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _updateCheckboxState(index, value!);
+                                        });
+                                      },
+                                    )),
+                                    DataCell(menuOptions.contains('A')
                                         ? Checkbox(
                                             value: item['CanAdd'] == 'Y',
                                             onChanged: (value) {
@@ -219,7 +149,7 @@ class _SearchPageState extends State<SearchPage> {
                                             },
                                           )
                                         : Container()),
-                                    DataCell(showCanEdit
+                                    DataCell(menuOptions.contains('E')
                                         ? Checkbox(
                                             value: item['CanEdit'] == 'Y',
                                             onChanged: (value) {
@@ -230,7 +160,7 @@ class _SearchPageState extends State<SearchPage> {
                                             },
                                           )
                                         : Container()),
-                                    DataCell(showCanDelete
+                                    DataCell(menuOptions.contains('D')
                                         ? Checkbox(
                                             value: item['CanDelete'] == 'Y',
                                             onChanged: (value) {
@@ -241,7 +171,7 @@ class _SearchPageState extends State<SearchPage> {
                                             },
                                           )
                                         : Container()),
-                                    DataCell(showCanPrint
+                                    DataCell(menuOptions.contains('P')
                                         ? Checkbox(
                                             value: item['CanPrint'] == 'Y',
                                             onChanged: (value) {
@@ -252,7 +182,7 @@ class _SearchPageState extends State<SearchPage> {
                                             },
                                           )
                                         : Container()),
-                                    DataCell(showCanExport
+                                    DataCell(menuOptions.contains('E')
                                         ? Checkbox(
                                             value: item['CanExport'] == 'Y',
                                             onChanged: (value) {
@@ -287,6 +217,24 @@ class _SearchPageState extends State<SearchPage> {
                                     fieldId: widget.fieldId,
                                   ),
                                 );
+
+                            // Show a SnackBar after saving
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Data Saved Successfully"),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+
+                            // Wait for the SnackBar to disappear before navigating
+                            Future.delayed(const Duration(seconds: 2), () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FilterPage(),
+                                ),
+                              );
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
@@ -343,7 +291,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  /// Build Parent-Child Relationship Map
   void _buildParentChildMap() {
     _parentChildMap.clear();
     for (int i = 0; i < _localData.length; i++) {
@@ -354,11 +301,9 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  /// Update Parent-Child Checkbox Behavior
   void _updateCheckboxState(int index, bool newValue) {
     String menuCode = _localData[index]['MenuCode'];
     _localData[index]['ShowMenu'] = newValue ? 'Y' : 'N';
-
     if (_parentChildMap.containsKey(menuCode)) {
       for (int childIndex in _parentChildMap[menuCode]!) {
         _updateCheckboxState(childIndex, newValue);
