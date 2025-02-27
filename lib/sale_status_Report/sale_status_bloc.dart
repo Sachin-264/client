@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'sale_model.dart'; // Import the SaleOrder model
 
 // Events
 abstract class SaleOrderEvent extends Equatable {
@@ -33,7 +34,7 @@ class SaleOrderInitial extends SaleOrderState {}
 class SaleOrderLoading extends SaleOrderState {}
 
 class SaleOrderLoaded extends SaleOrderState {
-  final List<Map<String, dynamic>> saleOrders;
+  final List<SaleOrder> saleOrders;
 
   const SaleOrderLoaded({required this.saleOrders});
 
@@ -59,21 +60,22 @@ class SaleOrderBloc extends Bloc<SaleOrderEvent, SaleOrderState> {
 
       try {
         // Construct the API URL with filter parameters
-        final url = Uri.parse(
-            'https://www.aquare.co.in/mobileAPI/ERP_getValues.php?'
-            'val1=${event.filters['userId'] ?? ''}&'
-            'val2=${event.filters['branchCode'] ?? ''}&'
-            'val3=${event.filters['addUser'] ?? ''}&'
-            'val4=${event.filters['fromDate'] ?? ''}&'
-            'val5=${event.filters['toDate'] ?? ''}&'
-            'val6=${event.filters['customerCode'] ?? ''}&'
-            'val7=${event.filters['soNoRecNo'] ?? ''}&'
-            'val8=${event.filters['saleOrderNo'] ?? ''}&' //sAale order no.
-            'val9=${event.filters['accountTypeCode'] ?? ''}&'
-            'val10=${event.filters['groupName'] ?? ''}&'
-            'val11=${event.filters['itemCode'] ?? ''}&'
-            'type=sp_GetSaleOrderDetails&'
-            'str=eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ2kzcnNBQlk1b1BpYW0wNy80Q3FXNlFwVnF6Zkl4ZzU1dU9ZS1lwWWxqUWc9PQ==');
+     final url = Uri.parse(
+            'http://localhost/AquavivaAPI/getSaleOrderSatus.php?'
+                'UserCode=${event.filters['UserCode'] ?? ''}&'
+                'BranchCode=${event.filters['BranchCode'] ?? ''}&'
+                'AddUser=${event.filters['AddUser'] ?? ''}&'
+                'FromDate=${event.filters['FromDate'] ?? ''}&'
+                'ToDate=${event.filters['ToDate'] ?? ''}&'
+                'AccountCode=${event.filters['AccountCode'] ?? ''}&'
+                'SONOMasterRecNo=${event.filters['SONOMasterRecNo'] ?? ''}&'
+                'ActualQuotationNo=${event.filters['ActualQuotationNo'] ?? ''}&'
+                'AccountTypeCode=${event.filters['AccountTypeCode'] ?? ''}&'
+                'GroupName=${event.filters['GroupName'] ?? ''}&'
+                'ItemNo=${event.filters['ItemNo'] ?? ''}&'
+                'SalesManRecNo=${event.filters['SalesManRecNo'] ?? ''}&'
+                'str=${event.filters['str'] ?? ''}'
+        );
 
         print('API URL: $url');
 
@@ -84,13 +86,22 @@ class SaleOrderBloc extends Bloc<SaleOrderEvent, SaleOrderState> {
         print('API Response Body: ${response.body}');
 
         if (response.statusCode == 200) {
-          final List<dynamic> jsonList = json.decode(response.body);
-          final saleOrders = jsonList.cast<Map<String, dynamic>>();
+          final Map<String, dynamic> jsonResponse = json.decode(response.body);
 
-          emit(SaleOrderLoaded(saleOrders: saleOrders));
+          if (jsonResponse['status'] == 'success') {
+            final List<dynamic> jsonList = jsonResponse['data'];
+
+            // Convert JSON data to SaleOrder objects
+            final List<SaleOrder> saleOrders = jsonList
+                .map((json) => SaleOrder.fromJson(json))
+                .toList();
+
+            emit(SaleOrderLoaded(saleOrders: saleOrders));
+          } else {
+            emit(SaleOrderError('Failed to load sale orders: ${jsonResponse['status']}'));
+          }
         } else {
-          emit(SaleOrderError(
-              'Failed to load sale orders: ${response.statusCode}'));
+          emit(SaleOrderError('Failed to load sale orders: ${response.statusCode}'));
         }
       } catch (e) {
         print('Error: $e');

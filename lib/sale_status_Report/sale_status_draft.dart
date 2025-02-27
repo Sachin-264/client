@@ -1,9 +1,10 @@
 import 'dart:developer';
-import 'package:client/saleorder/saleorderbloc.dart';
-import 'package:client/saleorder/saleorderdraft_bloc.dart';
-import 'package:client/saleorder/saleorderpage.dart';
+import 'package:client/sale_status_Report/sale_status_bloc.dart';
+import 'package:client/sale_status_Report/sale_status_draft_bloc.dart';
+import 'package:client/sale_status_Report/salestatuspage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 
 class SaleOrderDraftPage extends StatefulWidget {
   const SaleOrderDraftPage({super.key});
@@ -31,11 +32,15 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   String? _selectedCustomerCode;
   String? _selectedItemCode;
   String? _selectedSalesmanCode;
+  dynamic userID;
+  String? str;
 
   @override
   void initState() {
     super.initState();
     // Set default From Date to the 1st day of the current month
+    userID = '157.0';
+    str ='eTFKdGFqMG5ibWN0NGJ4ekIxUG8zbzRrNXZFbGQxaW96dHpteFFQdEdWQ0thdjJtQzZ6cDhtMW4zSjIvS0YwUVd1b0RBdnNLWitRbmkwV2w5elZUMkE9PQ==';
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
     _fromDateController.text = _formatDate(firstDayOfMonth);
@@ -44,7 +49,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     _toDateController.text = _formatDate(now);
 
     // Fetch data only once when the widget is initialized
-    context.read<SaleOrderDraftBloc>().add(FetchData());
+    context.read<SaleOrderDraftBloc>().add(FetchData(userID: userID, str: str));
   }
 
   @override
@@ -61,6 +66,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: BlocConsumer<SaleOrderDraftBloc, SaleOrderDraftState>(
         listener: (context, state) {
@@ -73,8 +79,8 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
             if (_selectedBranch == null && state.branches.isNotEmpty) {
               _selectedBranch = state.branches.first['code'];
               context.read<SaleOrderDraftBloc>().add(
-                    FetchData(selectedBranch: _selectedBranch),
-                  );
+                FetchData(userID: userID, str: str,selectedBranch: _selectedBranch),
+              );
             }
             if (_selectedCategory == null && state.categories.isNotEmpty) {
               setState(() {
@@ -99,7 +105,14 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text('Sale Order Report ', style: TextStyle(color: Colors.white)),
+      title: Text(
+        'Sale Order Status Report',
+        style: GoogleFonts.poppins(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       backgroundColor: Colors.blue,
       iconTheme: IconThemeData(color: Colors.white),
       actions: [
@@ -114,7 +127,11 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   }
 
   Widget _buildLoader() {
-    return Center(child: CircularProgressIndicator());
+    return Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+      ),
+    );
   }
 
   Widget _buildErrorState(String message) {
@@ -124,7 +141,14 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         children: [
           Icon(Icons.error, color: Colors.red, size: 50),
           SizedBox(height: 10),
-          Text(message, style: TextStyle(color: Colors.red, fontSize: 18)),
+          Text(
+            message,
+            style: GoogleFonts.poppins(
+              color: Colors.red,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -145,15 +169,21 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
               SizedBox(height: 20),
               _buildCustomerAutocomplete(state.customers),
               SizedBox(height: 20),
-              // _buildSalesmanAutocomplete(state.salesmanNames),
+              _buildSalesmanAutocomplete(state.salesmanNames),
               SizedBox(height: 20),
-              // _buildItemAutocomplete(state.items),
+              _buildItemAutocomplete(state.items),
               _buildDateRangeFields(),
               SizedBox(height: 30),
               Center(
-                  child: Text("OR",
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold))),
+                child: Text(
+                  "OR",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
               SizedBox(height: 20),
               _buildSaleOrderTextField(),
               SizedBox(height: 20),
@@ -183,8 +213,8 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         });
         // Fetch data with the selected branch
         context.read<SaleOrderDraftBloc>().add(
-              FetchData(selectedBranch: code),
-            );
+          FetchData(userID: userID, str: str,selectedBranch: code),
+        );
       },
     );
   }
@@ -209,42 +239,40 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
     );
   }
 
-// For Future purpose If we have to use SalesmanAutocomplete and ItemAutocomplete
+  Widget _buildSalesmanAutocomplete(List<Map<String, String>> salesmanNames) {
+    return _buildAutocompleteField(
+      key: _salesmanAutocompleteKey,
+      controller: _salesmanNameController,
+      label: 'Salesman Name',
+      options: salesmanNames,
+      onSelected: (code) {
+        setState(() {
+          _selectedSalesmanCode = code; // Store the selected salesman code
+          _salesmanNameController.text = salesmanNames
+              .firstWhere((item) => item['code'] == code)['name'] ??
+              '';
+          _saleOrderNoController.clear();
+        });
+      },
+    );
+  }
 
-  // Widget _buildSalesmanAutocomplete(List<Map<String, String>> salesmanNames) {
-  //   return _buildAutocompleteField(
-  //     key: _salesmanAutocompleteKey,
-  //     controller: _salesmanNameController,
-  //     label: 'Salesman Name',
-  //     options: salesmanNames,
-  //     onSelected: (code) {
-  //       setState(() {
-  //         _selectedSalesmanCode = code; // Store the selected salesman code
-  //         _salesmanNameController.text = salesmanNames
-  //                 .firstWhere((item) => item['code'] == code)['name'] ??
-  //             '';
-  //         _saleOrderNoController.clear();
-  //       });
-  //     },
-  //   );
-  // }
-
-  // Widget _buildItemAutocomplete(List<Map<String, String>> items) {
-  //   return _buildAutocompleteField(
-  //     key: _itemAutocompleteKey, // Pass the key
-  //     controller: _itemNameController,
-  //     label: 'Item Name',
-  //     options: items,
-  //     onSelected: (code) {
-  //       setState(() {
-  //         _selectedItemCode = code;
-  //         _itemNameController.text =
-  //             items.firstWhere((item) => item['code'] == code)['name'] ?? '';
-  //         _saleOrderNoController.clear();
-  //       });
-  //     },
-  //   );
-  // }
+  Widget _buildItemAutocomplete(List<Map<String, String>> items) {
+    return _buildAutocompleteField(
+      key: _itemAutocompleteKey, // Pass the key
+      controller: _itemNameController,
+      label: 'Item Name',
+      options: items,
+      onSelected: (code) {
+        setState(() {
+          _selectedItemCode = code;
+          _itemNameController.text =
+              items.firstWhere((item) => item['code'] == code)['name'] ?? '';
+          _saleOrderNoController.clear();
+        });
+      },
+    );
+  }
 
   Widget _buildCustomerAutocomplete(List<Map<String, String>> customers) {
     return _buildAutocompleteField(
@@ -274,7 +302,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         SizedBox(width: 20),
         Expanded(
           child:
-              _buildDateField(controller: _toDateController, label: 'To Date'),
+          _buildDateField(controller: _toDateController, label: 'To Date'),
         ),
       ],
     );
@@ -283,10 +311,15 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   Widget _buildSaleOrderTextField() {
     return TextFormField(
       controller: _saleOrderNoController,
-      style: TextStyle(fontWeight: FontWeight.bold),
+      style: GoogleFonts.poppins(
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
       decoration: InputDecoration(
         labelText: 'SALES ORDER NO (Last 4 digits)',
-        labelStyle: TextStyle(color: Colors.grey),
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey,
+        ),
         border: UnderlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
@@ -337,14 +370,21 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
       items: uniqueItems.map((item) {
         return DropdownMenuItem<String>(
           value: item['code'],
-          child: Text(item['name']!,
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          child: Text(
+            item['name']!,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
         );
       }).toList(),
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey),
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey,
+        ),
         border: UnderlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
@@ -368,15 +408,15 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         }
         return options
             .where((option) =>
-                option['name']
-                    ?.toLowerCase()
-                    .contains(textEditingValue.text.toLowerCase()) ??
-                false)
+        option['name']
+            ?.toLowerCase()
+            .contains(textEditingValue.text.toLowerCase()) ??
+            false)
             .map((option) => option['name'] ?? '');
       },
       onSelected: (String? selection) {
         final selectedItem = options.firstWhere(
-            (item) => item['name'] == selection,
+                (item) => item['name'] == selection,
             orElse: () => {'name': '', 'code': ''});
         onSelected(selectedItem['code']);
         controller.text = selection ?? '';
@@ -385,10 +425,15 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         return TextField(
           controller: textController,
           focusNode: focusNode,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
           decoration: InputDecoration(
             labelText: label,
-            labelStyle: TextStyle(color: Colors.grey),
+            labelStyle: GoogleFonts.poppins(
+              color: Colors.grey,
+            ),
             border: UnderlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
@@ -403,10 +448,15 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
   }) {
     return TextField(
       controller: controller,
-      style: TextStyle(fontWeight: FontWeight.bold),
+      style: GoogleFonts.poppins(
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey),
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey,
+        ),
         suffixIcon: IconButton(
           icon: Icon(Icons.calendar_today),
           onPressed: () async {
@@ -489,7 +539,13 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
         children: [
           Icon(icon, color: Colors.white),
           SizedBox(width: 5),
-          Text(label, style: TextStyle(color: Colors.white)),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -515,7 +571,7 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
       _itemAutocompleteKey = UniqueKey();
 
       // Fetch data again to reset the branch and category dropdowns
-      context.read<SaleOrderDraftBloc>().add(FetchData());
+      context.read<SaleOrderDraftBloc>().add(FetchData(userID: userID, str: str));
     });
   }
 
@@ -527,19 +583,21 @@ class _SaleOrderDraftPageState extends State<SaleOrderDraftPage> {
       return;
     }
 
-    final Map<String, String> filters = {
-      'userId': '157.0',
-      'branchCode': _selectedBranch ?? '',
-      'addUser': '',
-      'fromDate': _fromDateController.text,
-      'toDate': _toDateController.text,
-      'customerCode': _selectedCustomerCode ?? '',
-      'soNoRecNo': _selectedCategory ?? '',
-      'saleOrderNo': _saleOrderNoController.text,
-      'accountTypeCode': _selectedSalesmanCode ?? '', //isme kya dalna hai
-      'groupName': 'Project',
-      'itemCode': _selectedItemCode ?? '',
-    };
+final Map<String, String> filters = {
+  'UserCode': '1',
+  'BranchCode': _selectedBranch ?? '',
+  'AddUser': '',
+  'FromDate': _fromDateController.text,
+  'ToDate': _toDateController.text,
+  'AccountCode': _selectedCustomerCode ?? '',
+  'SONOMasterRecNo': _selectedCategory ??  '0',
+  'ActualQuotationNo': '0',
+  'AccountTypeCode':'', // 'saleOrderNo': _saleOrderNoController.text,
+  'GroupName': '',
+  'ItemNo': _selectedItemCode ?? '',
+  'SalesManRecNo': _selectedSalesmanCode ?? '0',
+  'str': str.toString(),
+};
 
     print('Filter Data:');
     filters.forEach((key, value) {

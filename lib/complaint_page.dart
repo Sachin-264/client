@@ -1,5 +1,7 @@
 import 'package:client/PPS%20report/ppsdraft.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
+import 'package:client/QualtyChecks/qualityFilter.dart';
+import 'package:client/QualtyChecks/qualityFilterbloc.dart';
 import 'package:client/Search_box/filter_bloc.dart';
 import 'package:client/Search_box/filter_page.dart';
 import 'package:client/TargetDashboard/TargetDashboardPage.dart';
@@ -14,8 +16,8 @@ import 'package:client/itemmanagement/itembloc.dart';
 import 'package:client/itemmanagement/itemrealbloc.dart';
 import 'package:client/itemmanagement/itemrealdraft.dart';
 import 'package:client/itemmanagement/itemselectionpage.dart';
-import 'package:client/saleorder/sale_order_page_draft.dart';
-import 'package:client/saleorder/saleorderdraft_bloc.dart';
+import 'package:client/sale_status_Report/sale_status_draft.dart';
+import 'package:client/sale_status_Report/sale_status_draft_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
@@ -97,7 +99,7 @@ class ComplaintPage extends StatelessWidget {
               ),
               _createDrawerItem(
                 icon: Icons.local_shipping,
-                text: 'Sale Order Page',
+                text: 'Sale Status Page',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -180,6 +182,21 @@ class ComplaintPage extends StatelessWidget {
                       builder: (context) => BlocProvider.value(
                         value: context.read<UserGroupBloc>(),
                         child: FilterPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              _createDrawerItem(
+                icon: Icons.high_quality,
+                text: 'Quality Checks',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: context.read<BranchBloc>(),
+                        child: QualityFilterPage(),
                       ),
                     ),
                   );

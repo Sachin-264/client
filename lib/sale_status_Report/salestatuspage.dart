@@ -5,12 +5,13 @@ import 'package:pdf/pdf.dart'; // For PDF export
 import 'package:pdf/widgets.dart' as pw; // For PDF export
 import 'package:universal_html/html.dart'
     as html; // For file downloads in the browser
-import 'saleorderbloc.dart';
-import 'saleorderlist.dart';
+import 'sale_status_bloc.dart';
+import 'sale_status_list.dart';
 import 'dart:io'; // For file operations
 import 'package:path_provider/path_provider.dart';
 
 class SaleOrderPage extends StatefulWidget {
+
   final Map<String, String> filters;
   const SaleOrderPage({super.key, required this.filters});
 
@@ -41,7 +42,7 @@ class _SaleOrderPageState extends State<SaleOrderPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Sale Orders',
+            'Sale Order Status Report',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.blue,
@@ -113,151 +114,197 @@ class _SaleOrderPageState extends State<SaleOrderPage> {
     );
   }
 
-  // Export to Excel
-  // Export to Excel
-// Export to Excel
-  // Export to Excel
-// Export to Excel
-// For file storage
 
 // Export to Excel for Sale Order List
+
+
   Future<void> _exportToExcel(BuildContext context) async {
     try {
-      // Fetch data from the Bloc
       final state = _saleOrderBloc.state;
       if (state is SaleOrderLoaded) {
         final saleOrders = state.saleOrders;
 
-        // Create an Excel file
         var excel = Excel.createExcel();
+        excel.delete('SaleOrderStatus'); // Remove default sheet
+        var sheet = excel['SaleOrderStatus'];
 
-        // Remove the default "flutter" sheet
-        excel.delete('flutter');
-
-        // Create a new sheet
-        var sheet = excel['Sheet1'];
-
-        // Add headers (same as PlutoGrid columns)
+        // Add headers for all columns
         sheet.appendRow([
-          TextCellValue('Sale Order Date'),
-          TextCellValue('Sale Order No'),
-          TextCellValue('Party Name'),
-          TextCellValue('Value'),
-          TextCellValue('Salesman'),
-          TextCellValue('Created By'),
-          TextCellValue('Created On'),
-        ]);
+          'ORDER NO',
+          'ORDER DATE',
+          'SALES MANAGER',
+          'SALES MAN NAME',
+          'ORDER STATUS',
+          'CUSTOMER',
+          'CUSTOMER PO NO',
+          'CUSTOMER PO DATE',
+          'DEL DATE',
+          'LD',
+          'LD%',
+          'ITEM NAME',
+          'QTY',
+          'VALUE',
+          'SALES ORDER VALUE',
+          'DISPATCH VALUE',
+          'BALANCE',
+          'EVA',
+          'ESM',
+          'AVA',
+          'ASM',
+          'AVA-EVA',
+          'ASM-ESM',
+          'QUOTATION',
+          'INQ NO',
+        ].map((header) => TextCellValue(header)).toList());
 
         // Add data rows
         for (var order in saleOrders) {
+          final balance = order.grandTotal - order.dispatchValue;
+          final qty = double.tryParse(order.qty) ?? 0.0; // Parse Qty
           sheet.appendRow([
-            TextCellValue(order['PostingDate'] ?? 'N/A'), // Sale Order Date
-            TextCellValue(order['SaleOrderNo'] ?? 'N/A'), // Sale Order No
-            TextCellValue(order['AccountName'] ?? 'N/A'), // Party Name
-            TextCellValue(order['GrandTotal'] ?? 'N/A'), // Value
-            TextCellValue(order['SalesManName'] ?? 'N/A'), // Salesman
-            TextCellValue(order['CreatedBy'] ?? 'N/A'), // Created By
-            TextCellValue(order['AddDate'] ?? 'N/A'), // Created On
+            TextCellValue(order.orderNo),
+            TextCellValue(order.orderDate),
+            TextCellValue(order.saleManager),
+            TextCellValue(order.salesManName),
+            TextCellValue(order.resultStatus),
+            TextCellValue(order.accountName),
+            TextCellValue(order.customerPONo),
+            TextCellValue(order.customerPODate),
+            TextCellValue(order.deliveryDate),
+            TextCellValue(order.ldyn),
+            TextCellValue(order.ldPer),
+            TextCellValue(order.itemName),
+            DoubleCellValue(qty), // Use parsed Qty
+            DoubleCellValue(order.value),
+            DoubleCellValue(order.grandTotal),
+            DoubleCellValue(order.dispatchValue),
+            DoubleCellValue(balance),
+            TextCellValue(order.eva),
+            TextCellValue(order.esm),
+            TextCellValue(order.ava),
+            TextCellValue(order.asm),
+            TextCellValue(''), // AVA-EVA (placeholder)
+            TextCellValue(''), // ASM-ESM (placeholder)
+            TextCellValue(order.quotationNo),
+            TextCellValue(order.inquiryNo),
           ]);
         }
 
-        // Save the Excel file to bytes
+        // Save and download
         var fileBytes = excel.save();
         if (fileBytes != null) {
-          // Get the application documents directory
-          final directory = await getApplicationDocumentsDirectory();
-          final file = File('${directory.path}/sale_orders.xlsx');
+          final blob = html.Blob([fileBytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          final url = html.Url.createObjectUrlFromBlob(blob);
+          html.AnchorElement(href: url)
+            ..setAttribute('download', 'sale_orders_report.xlsx')
+            ..click();
+          html.Url.revokeObjectUrl(url);
 
-          // Write the Excel file to the device's storage
-          await file.writeAsBytes(fileBytes);
-
-          // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Exported to Excel successfully!')),
           );
-
-          // Optional: Print the file path for debugging
-          print('Excel file saved at: ${file.path}');
         }
       }
     } catch (e, stackTrace) {
-      // Log the error and stack trace
-      print('Error occurred during Excel export: $e');
-      print('Stack trace: $stackTrace');
-
-      // Show error message
+      print('Excel Export Error: $e\n$stackTrace');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export: ${e.toString()}')),
+      );
     }
   }
 
 // Export to PDF
+
   Future<void> _exportToPDF(BuildContext context) async {
     try {
-      // Fetch data from the Bloc
       final state = _saleOrderBloc.state;
       if (state is SaleOrderLoaded) {
         final saleOrders = state.saleOrders;
-
-        // Create a PDF document
         final pdf = pw.Document();
 
-        // Add a page to the PDF
         pdf.addPage(
           pw.Page(
             build: (pw.Context context) {
               return pw.Table.fromTextArray(
                 headers: [
-                  'Sale Order Date',
-                  'Sale Order No',
-                  'Party Name',
-                  'Value',
-                  'Salesman',
-                  'Created By',
-                  'Created On',
+                  'ORDER NO',
+                  'ORDER DATE',
+                  'SALES MANAGER',
+                  'SALES MAN NAME',
+                  'ORDER STATUS',
+                  'CUSTOMER',
+                  'CUSTOMER PO NO',
+                  'CUSTOMER PO DATE',
+                  'DEL DATE',
+                  'LD',
+                  'LD%',
+                  'ITEM NAME',
+                  'QTY',
+                  'VALUE',
+                  'SALES ORDER VALUE',
+                  'DISPATCH VALUE',
+                  'BALANCE',
+                  'EVA',
+                  'ESM',
+                  'AVA',
+                  'ASM',
+                  'AVA-EVA',
+                  'ASM-ESM',
+                  'QUOTATION',
+                  'INQ NO',
                 ],
-                data: saleOrders
-                    .map((order) => [
-                          order['PostingDate'] ?? 'N/A', // Sale Order Date
-                          order['SaleOrderNo'] ?? 'N/A', // Sale Order No
-                          order['AccountName'] ?? 'N/A', // Party Name
-                          order['GrandTotal'] ?? 'N/A', // Value
-                          order['SalesManName'] ?? 'N/A', // Salesman
-                          order['CreatedBy'] ?? 'N/A', // Created By
-                          order['AddDate'] ?? 'N/A', // Created On
-                        ])
-                    .toList(),
+                data: saleOrders.map((order) {
+                  final balance = order.grandTotal - order.dispatchValue;
+                  final qty = double.tryParse(order.qty) ?? 0.0; // Parse Qty
+                  return [
+                    order.orderNo,
+                    order.orderDate,
+                    order.saleManager,
+                    order.salesManName,
+                    order.resultStatus,
+                    order.accountName,
+                    order.customerPONo,
+                    order.customerPODate,
+                    order.deliveryDate,
+                    order.ldyn,
+                    order.ldPer,
+                    order.itemName,
+                    qty.toString(), // Use parsed Qty
+                    order.value.toStringAsFixed(2),
+                    order.grandTotal.toStringAsFixed(2),
+                    order.dispatchValue.toStringAsFixed(2),
+                    balance.toStringAsFixed(2),
+                    order.eva,
+                    order.esm,
+                    order.ava,
+                    order.asm,
+                    '', // AVA-EVA
+                    '', // ASM-ESM
+                    order.quotationNo,
+                    order.inquiryNo,
+                  ];
+                }).toList(),
               );
             },
           ),
         );
 
-        // Save the PDF to bytes
         final pdfBytes = await pdf.save();
-
-        // Create a Blob from the PDF bytes
         final blob = html.Blob([pdfBytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-
-        // Create an anchor element to trigger the download
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', 'sale_orders.pdf')
+        html.AnchorElement(href: url)
+          ..setAttribute('download', 'SaleOrderStatus')
           ..click();
-
-        // Revoke the object URL to free up memory
         html.Url.revokeObjectUrl(url);
 
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Exported to PDF successfully!')),
         );
       }
     } catch (e, stackTrace) {
-      // Log the error and stack trace
-      print('Error occurred during PDF export: $e');
-      print('Stack trace: $stackTrace');
-
-      // Show error message
+      print('PDF Export Error: $e\n$stackTrace');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to export to PDF: $e')),
+        SnackBar(content: Text('Failed to export: ${e.toString()}')),
       );
     }
   }
