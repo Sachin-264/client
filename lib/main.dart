@@ -1,3 +1,4 @@
+import 'package:client/OrderAllocation/orderAllocation_bloc.dart';
 import 'package:client/sale_status_Report/sale_status_bloc.dart';
 import 'package:client/sale_status_Report/sale_status_draft_bloc.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:client/TargetDashboard/targetDashboardBloc.dart'; // ✅ Fixed i
 import 'package:client/itemmanagement/itembloc.dart';
 
 // Import Pages
+import 'OrderAllocation/orderAllocation_draft_bloc.dart';
 import 'complaint_page.dart';
 
 String companyCode = '101';
@@ -26,22 +28,19 @@ void main() {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider<InvoiceDraftPageBloc>(
-            create: (context) => InvoiceDraftPageBloc()),
+        BlocProvider<InvoiceDraftPageBloc>(create: (context) => InvoiceDraftPageBloc()),
         BlocProvider<InvoiceBloc>(create: (context) => InvoiceBloc()),
-        BlocProvider<SaleOrderDraftBloc>(
-            create: (context) => SaleOrderDraftBloc()),
-        BlocProvider<TargetDashboardBloc>(
-            create: (context) => TargetDashboardBloc()),
+        BlocProvider<SaleOrderDraftBloc>(create: (context) => SaleOrderDraftBloc()),
+        BlocProvider<TargetDashboardBloc>(create: (context) => TargetDashboardBloc()),
         BlocProvider<SaleOrderBloc>(create: (context) => SaleOrderBloc()),
-        BlocProvider<ItemDraftPageBloc>(
-            create: (context) => ItemDraftPageBloc()),
+        BlocProvider<ItemDraftPageBloc>(create: (context) => ItemDraftPageBloc()),
         BlocProvider<PPSDraftPageBloc>(create: (context) => PPSDraftPageBloc()),
         BlocProvider<PpsReportBloc>(create: (context) => PpsReportBloc()),
         BlocProvider<SelectPageBloc>(create: (context) => SelectPageBloc()),
-        BlocProvider<UserGroupBloc>(
-            create: (context) => UserGroupBloc(companyCode)),
+        BlocProvider<UserGroupBloc>(create: (context) => UserGroupBloc(companyCode)),
         BlocProvider<BranchBloc>(create: (context) => BranchBloc()),
+        BlocProvider<orderAllocationDraftBloc>(create: (context) => orderAllocationDraftBloc()),
+        BlocProvider<orderAllocationBloc>(create: (context) => orderAllocationBloc()),
       ],
       child: MyApp(),
     ),

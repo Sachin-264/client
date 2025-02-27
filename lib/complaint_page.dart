@@ -1,3 +1,4 @@
+import 'package:client/OrderAllocation/orderAllocation_draft_bloc.dart';
 import 'package:client/PPS%20report/ppsdraft.dart';
 import 'package:client/PPS%20report/ppsdraftbloc.dart';
 import 'package:client/QualtyChecks/qualityFilter.dart';
@@ -32,6 +33,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 // ignore: depend_on_referenced_packages
 import 'package:universal_html/html.dart' as html;
+
+import 'OrderAllocation/orderAllocation_draft.dart';
 
 class ComplaintPage extends StatelessWidget {
   const ComplaintPage({super.key});
@@ -107,6 +110,21 @@ class ComplaintPage extends StatelessWidget {
                       builder: (context) => BlocProvider.value(
                         value: BlocProvider.of<SaleOrderDraftBloc>(context),
                         child: SaleOrderDraftPage(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              _createDrawerItem(
+                icon: Icons.local_shipping,
+                text: 'Order Allocation Page',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider.value(
+                        value: BlocProvider.of<orderAllocationDraftBloc>(context),
+                        child: orderAllocationDraftPage(),
                       ),
                     ),
                   );
